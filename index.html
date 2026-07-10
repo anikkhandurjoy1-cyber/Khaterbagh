@@ -295,6 +295,10 @@
     <div class="form-group"><label>Full Name</label><input type="text" id="custName"></div>
     <div class="form-group"><label>Phone Number</label><input type="tel" id="custPhone" placeholder="01XXXXXXXXX"></div>
     <div class="form-group"><label>Address</label><textarea id="custAddress" rows="3"></textarea></div>
+    <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-group"><label>City</label><select id="custCity"><option value="">Select City</option></select></div>
+      <div class="form-group"><label>Zone</label><select id="custZone"><option value="">Select Zone</option></select></div>
+    </div>
     <div class="form-group"><label>Order Notes (optional)</label><textarea id="custNotes" rows="2"></textarea></div>
     <div id="checkoutSummary"></div>
   </div>
@@ -358,7 +362,8 @@ fbq('track', 'PageView');
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
   getFirestore, collection, addDoc, getDocs, query, where, orderBy,
-  serverTimestamp, limit, enableIndexedDbPersistence, onSnapshot
+  serverTimestamp, limit, enableIndexedDbPersistence, onSnapshot,
+  doc, deleteDoc, setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -386,6 +391,25 @@ function toast(msg){
   t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'), 2000);
 }
+
+const BD_CITY_ZONES = {
+  'Dhaka': ['Mirpur','Dhanmondi','Gulshan','Uttara','Mohammadpur','Badda','Jatrabari','Old Dhaka','Tejgaon','Banani'],
+  'Chattogram': ['Agrabad','Nasirabad','Halishahar','Pahartali','Patenga','GEC Circle'],
+  'Khulna': ['Khalishpur','Sonadanga','Boyra','Daulatpur'],
+  'Rajshahi': ['Boalia','Shaheb Bazar','Rajpara','Motihar'],
+  'Sylhet': ['Zindabazar','Amberkhana','Shahporan','Tilagor'],
+  'Barisal': ['Sadar Road','Nathullabad','Band Road'],
+  'Rangpur': ['Jahaj Company More','Dhap','Modern More'],
+  'Mymensingh': ['Town Hall','Choto Bazar','Ganginarpar'],
+  'Comilla': ['Kandirpar','Race Course','Tomsom Bridge'],
+  'Narayanganj': ['Chashara','Fatullah','Siddhirganj'],
+  'Gazipur': ['Tongi','Joydebpur','Konabari']
+};
+document.getElementById('custCity').innerHTML = '<option value="">Select City</option>' + Object.keys(BD_CITY_ZONES).map(c=>`<option>${c}</option>`).join('');
+document.getElementById('custCity').addEventListener('change', (e)=>{
+  const zones = BD_CITY_ZONES[e.target.value] || [];
+  document.getElementById('custZone').innerHTML = '<option value="">Select Zone</option>' + zones.map(z=>`<option>${z}</option>`).join('');
+});
 
 // ---------- State ----------
 let allProducts = [];
@@ -704,6 +728,7 @@ document.getElementById('goCheckout').addEventListener('click', ()=>{
   cartDrawer.classList.remove('open');
   checkoutDrawer.classList.add('open');
   renderCheckoutSummary();
+  startIncompleteOrderTracking();
 
   const total = cart.reduce((s,c)=>s+c.price*c.qty,0);
   if(typeof fbq !== 'undefined'){
@@ -716,6 +741,35 @@ document.getElementById('goCheckout').addEventListener('click', ()=>{
     gtag('event','begin_checkout',{currency:'BDT', value: total});
   }
 });
+
+// ---------- Incomplete order (abandoned checkout) tracking ----------
+let incompleteOrderDocId = localStorage.getItem('kb_incomplete_id') || null;
+let incompleteSaveTimeout;
+function startIncompleteOrderTracking(){
+  if(!incompleteOrderDocId){
+    incompleteOrderDocId = 'inc_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+    localStorage.setItem('kb_incomplete_id', incompleteOrderDocId);
+  }
+  ['custName','custPhone','custAddress'].forEach(id=>{
+    document.getElementById(id).addEventListener('input', scheduleIncompleteSave);
+  });
+}
+function scheduleIncompleteSave(){
+  clearTimeout(incompleteSaveTimeout);
+  incompleteSaveTimeout = setTimeout(saveIncompleteOrder, 800);
+}
+async function saveIncompleteOrder(){
+  const name = document.getElementById('custName').value.trim();
+  const phone = document.getElementById('custPhone').value.trim();
+  const address = document.getElementById('custAddress').value.trim();
+  if(!name && !phone && !address) return;
+  try{
+    await setDoc(doc(db,'incomplete_orders', incompleteOrderDocId), {
+      customerName: name, phone: phone, address: address,
+      items: cart, updatedAt: serverTimestamp()
+    }, {merge:true});
+  }catch(e){ console.error(e); }
+}
 document.getElementById('closeCheckout').addEventListener('click', ()=>{
   checkoutDrawer.classList.remove('open');
   cartOverlay.classList.remove('open');
@@ -765,6 +819,8 @@ document.getElementById('placeOrderBtn').addEventListener('click', async ()=>{
   const name = document.getElementById('custName').value.trim();
   const phone = document.getElementById('custPhone').value.trim();
   const address = document.getElementById('custAddress').value.trim();
+  const city = document.getElementById('custCity').value;
+  const zone = document.getElementById('custZone').value;
   const notes = document.getElementById('custNotes').value.trim();
 
   if(!name || !phone || !address){
@@ -792,13 +848,22 @@ document.getElementById('placeOrderBtn').addEventListener('click', async ()=>{
       customerName: name,
       phone: phone,
       address: address,
+      city: city,
+      zone: zone,
       notes: notes,
       items: cart,
       total: total,
-      status: 'pending', // admin must approve
+      status: 'Processing', // admin manages full lifecycle from here
       isReturningCustomer: isReturning,
       createdAt: serverTimestamp()
     });
+
+    // remove the incomplete-order draft now that checkout is complete
+    if(incompleteOrderDocId){
+      deleteDoc(doc(db,'incomplete_orders', incompleteOrderDocId)).catch(()=>{});
+      incompleteOrderDocId = null;
+      localStorage.removeItem('kb_incomplete_id');
+    }
 
     cart = [];
     saveCart();
