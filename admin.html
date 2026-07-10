@@ -3,223 +3,321 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Khaterbagh - Admin Panel</title>
+<title>Khaterbagh Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --primary:#0f6e56;
-    --primary-dark:#085041;
-    --accent:#D85A30;
-    --bg:#f4f4f2;
-    --card-bg:#ffffff;
-    --text:#222;
-    --text-light:#666;
-    --border:#e5e5e0;
-    --danger:#E24B4A;
-    --warn:#EF9F27;
-  }
-  *{margin:0;padding:0;box-sizing:border-box;}
-  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);}
-
-  /* Layout */
-  .topbar{background:var(--primary-dark);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;}
-  .topbar .brand{font-weight:700;font-size:17px;}
-  .bell-wrap{position:relative;cursor:pointer;font-size:20px;}
-  .bell-badge{position:absolute;top:-6px;right:-8px;background:var(--danger);color:#fff;font-size:10px;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;}
-
-  .tabs{display:flex;gap:0;background:var(--card-bg);border-bottom:1px solid var(--border);overflow-x:auto;}
-  .tab-btn{padding:12px 18px;background:none;border:none;font-size:14px;cursor:pointer;color:var(--text-light);border-bottom:2px solid transparent;white-space:nowrap;}
-  .tab-btn.active{color:var(--primary);border-color:var(--primary);font-weight:600;}
-
-  main{max-width:1000px;margin:0 auto;padding:16px;}
-  .tab-content{display:none;}
-  .tab-content.active{display:block;}
-
-  /* Stat cards */
-  .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px;}
-  .stat-card{background:var(--card-bg);border-radius:10px;padding:14px;border:1px solid var(--border);}
-  .stat-card .num{font-size:22px;font-weight:700;color:var(--primary);}
-  .stat-card .lbl{font-size:12px;color:var(--text-light);margin-top:2px;}
-
-  /* Product form */
-  .form-card{background:var(--card-bg);border-radius:10px;padding:16px;border:1px solid var(--border);margin-bottom:16px;}
-  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
-  .form-group{margin-bottom:10px;}
-  .form-group label{display:block;font-size:12px;color:var(--text-light);margin-bottom:4px;}
-  .form-group input,.form-group textarea,.form-group select{width:100%;padding:9px;border:1px solid var(--border);border-radius:6px;font-size:14px;}
-  .btn{padding:10px 18px;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;}
-  .btn-primary{background:var(--primary);color:#fff;}
-  .btn-danger{background:var(--danger);color:#fff;}
-  .btn-warn{background:var(--warn);color:#412402;}
-  .btn-outline{background:none;border:1px solid var(--border);color:var(--text);}
-
-  .upload-zone{border:2px dashed var(--border);border-radius:8px;padding:20px;text-align:center;cursor:pointer;margin-bottom:10px;position:relative;}
-  .upload-zone img{max-width:100px;max-height:100px;border-radius:6px;margin-bottom:6px;}
-  .upload-zone .up-text{font-size:13px;color:var(--text-light);}
-  .upload-progress{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:8px;display:none;}
-  .upload-progress-bar{height:100%;background:var(--primary);width:0%;transition:width .2s;}
-
-  /* Product list */
-  .prod-row{display:flex;gap:10px;align-items:center;background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px;}
-  .prod-row img{width:50px;height:50px;object-fit:cover;border-radius:6px;background:#eee;}
-  .prod-info{flex:1;}
-  .prod-info .pname{font-size:14px;font-weight:500;}
-  .prod-info .pmeta{font-size:12px;color:var(--text-light);}
-  .prod-actions{display:flex;gap:6px;}
-  .icon-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:6px 10px;cursor:pointer;font-size:13px;}
-
-  /* Order card */
-  .order-card{background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;}
-  .order-head{display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;}
-  .order-id{font-weight:600;font-size:14px;}
-  .status-badge{font-size:11px;padding:3px 9px;border-radius:12px;font-weight:600;}
-  .status-pending{background:#FAEEDA;color:#633806;}
-  .status-approved{background:#EAF3DE;color:#27500A;}
-  .status-rejected{background:#FCEBEB;color:#791F1F;}
-  .returning-tag{background:#E1F5EE;color:#085041;font-size:11px;padding:3px 9px;border-radius:12px;margin-left:6px;}
-  .order-detail{font-size:13px;color:var(--text-light);margin:3px 0;}
-  .order-items{font-size:13px;margin:8px 0;padding:8px;background:var(--bg);border-radius:6px;}
-  .order-total{font-weight:700;margin-top:6px;}
-  .order-actions{display:flex;gap:8px;margin-top:10px;}
-
-  .filter-chips{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;}
-  .chip{padding:6px 14px;border-radius:20px;background:var(--card-bg);border:1px solid var(--border);font-size:13px;cursor:pointer;white-space:nowrap;}
-  .chip.active{background:var(--primary);color:#fff;border-color:var(--primary);}
-
-  .empty-msg{text-align:center;padding:40px;color:var(--text-light);font-size:14px;}
-
-  #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;}
-  #toast.show{opacity:1;}
-
-  @media(max-width:480px){.form-row{grid-template-columns:1fr;}}
-
-  /* Login screen */
-  .login-screen{position:fixed;inset:0;background:var(--primary-dark);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;}
-  .login-box{background:#fff;border-radius:14px;padding:30px 24px;max-width:340px;width:100%;}
-  .login-box h2{font-size:20px;margin-bottom:4px;color:var(--primary-dark);}
-  .login-box .sub{font-size:13px;color:var(--text-light);margin-bottom:20px;}
-  .login-box input{width:100%;padding:11px;border:1px solid var(--border);border-radius:8px;font-size:14px;margin-bottom:12px;}
-  .login-box button{width:100%;padding:12px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;}
-  .login-error{color:var(--danger);font-size:12px;margin-bottom:10px;display:none;}
-  #adminApp{display:none;}
-
-  /* Customers tab */
-  .customer-card{background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;}
-  .customer-card .cname{font-size:14px;font-weight:500;}
-  .customer-card .cmeta{font-size:12px;color:var(--text-light);}
-  .customer-card .corders{font-size:13px;font-weight:600;color:var(--primary);}
-
-  /* Low stock warning */
-  .low-stock{color:var(--danger);font-weight:600;}
-
-  /* Print invoice */
-  @media print{
-    body *{visibility:hidden;}
-    #printArea, #printArea *{visibility:visible;}
-    #printArea{position:absolute;top:0;left:0;width:100%;}
-  }
+:root{
+  --primary:#0f6e56; --primary2:#D85A30; --accent:#0095B6;
+  --surface:#F4F6FA; --card:#FFFFFF; --border:#E2E5EC;
+  --text:#14141F; --muted:#6B7280; --green:#16A34A; --yellow:#D97706;
+  --red:#DC2626; --blue:#2563EB; --purple:#7C3AED; --sw:220px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;font-family:'Inter','Hind Siliguri',sans-serif;background:var(--surface);color:var(--text);font-size:14px;}
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:var(--primary);}
+.login-card{background:var(--card);border-radius:16px;padding:36px 28px;width:100%;max-width:360px;text-align:center;}
+.login-logo{font-weight:800;font-size:22px;color:var(--primary);margin-bottom:4px;}
+.login-sub{font-size:13px;color:var(--muted);margin-bottom:22px;}
+.login-input{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:12px 16px;border-radius:10px;font-size:14px;outline:none;margin-bottom:12px;}
+.login-input:focus{border-color:var(--primary);}
+.login-btn{width:100%;background:var(--primary);border:none;color:#fff;padding:13px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;}
+.login-err{color:var(--red);font-size:13px;margin-top:10px;display:none;}
+#adminApp{display:none;}
+.sidebar{position:fixed;top:0;left:0;width:var(--sw);height:100vh;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:100;overflow-y:auto;}
+.sb-logo{padding:18px 16px;border-bottom:1px solid var(--border);font-weight:800;font-size:17px;color:var(--primary);}
+.nav-sec{padding:10px 0;}
+.nav-lbl{font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;padding:4px 16px 6px;}
+.ni{display:flex;align-items:center;gap:9px;padding:9px 16px;cursor:pointer;color:var(--muted);font-size:13px;font-weight:500;border-left:3px solid transparent;}
+.ni:hover{color:var(--text);background:rgba(0,0,0,.03);}
+.ni.active{color:var(--primary);border-left-color:var(--primary);background:rgba(15,110,86,.06);}
+.ni .ic{font-size:15px;width:18px;text-align:center;}
+.nb{margin-left:auto;background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;}
+.nb.y{background:var(--yellow);color:#000;}
+.topbar{position:fixed;top:0;left:var(--sw);right:0;height:54px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:99;}
+.tb-title{font-weight:800;font-size:16px;}
+.tb-right{display:flex;align-items:center;gap:14px;}
+.bell-wrap{position:relative;cursor:pointer;font-size:18px;}
+.bell-badge{position:absolute;top:-6px;right:-8px;background:var(--red);color:#fff;font-size:10px;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;}
+.logout-link{font-size:12px;color:var(--muted);cursor:pointer;border:1px solid var(--border);padding:6px 12px;border-radius:8px;background:none;}
+.main{margin-left:var(--sw);margin-top:54px;padding:20px;}
+.page{display:none;}
+.page.active{display:block;}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:18px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;}
+.stat-card .n{font-size:24px;font-weight:800;color:var(--primary);}
+.stat-card .l{font-size:12px;color:var(--muted);margin-top:2px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:16px;}
+.card h3{font-size:15px;margin-bottom:12px;}
+.form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:10px;}
+.form-group label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--surface);}
+.btn{padding:9px 16px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-danger{background:var(--red);color:#fff;}
+.btn-outline{background:var(--card);border:1px solid var(--border);color:var(--text);}
+.btn-sm{padding:5px 10px;font-size:12px;}
+.status-tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;}
+.stab{padding:7px 14px;border-radius:20px;border:1px solid var(--border);background:var(--card);font-size:12px;cursor:pointer;white-space:nowrap;}
+.stab.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;}
+.toolbar input,.toolbar select{padding:8px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--card);}
+.tbl-wrap{overflow-x:auto;background:var(--card);border:1px solid var(--border);border-radius:12px;}
+table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:800px;}
+th{background:var(--surface);padding:10px 8px;text-align:left;font-weight:700;color:var(--muted);font-size:11px;white-space:nowrap;text-transform:uppercase;}
+td{padding:9px 8px;border-top:1px solid var(--border);white-space:nowrap;}
+.empty-row{text-align:center;padding:40px;color:var(--muted);}
+.status-select,.courier-select{padding:5px 6px;border-radius:6px;border:1px solid var(--border);font-size:11px;}
+.returning-tag{background:#E1F5EE;color:#085041;font-size:10px;padding:2px 7px;border-radius:10px;margin-left:4px;}
+.upload-zone{border:2px dashed var(--border);border-radius:8px;padding:16px;text-align:center;cursor:pointer;margin-bottom:10px;}
+.gallery-preview{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:6px;}
+.gallery-preview img{width:56px;height:56px;object-fit:cover;border-radius:6px;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:500;padding:16px;}
+.modal-overlay.show{display:flex;}
+.modal-box{background:var(--card);border-radius:14px;padding:22px;max-width:520px;width:100%;max-height:85vh;overflow-y:auto;}
+.modal-box h3{margin-bottom:14px;font-size:16px;}
+.modal-close{float:right;background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;}
+#toast.show{opacity:1;}
+@media(max-width:768px){
+  :root{--sw:0px;}
+  .sidebar{transform:translateX(-100%);transition:transform .2s;width:220px;}
+  .sidebar.open{transform:translateX(0);}
+  .topbar{left:0;}
+  .main{margin-left:0;}
+  .menu-toggle{display:block !important;}
+}
+.menu-toggle{display:none;background:none;border:none;font-size:20px;cursor:pointer;}
 </style>
 </head>
 <body>
 
-<div class="login-screen" id="loginScreen">
-  <div class="login-box">
-    <h2>Khaterbagh Admin</h2>
-    <div class="sub">লগইন করে এডমিন প্যানেলে প্রবেশ করুন</div>
-    <div class="login-error" id="loginError">ভুল ইমেইল অথবা পাসওয়ার্ড</div>
-    <input type="email" id="loginEmail" placeholder="Email">
-    <input type="password" id="loginPassword" placeholder="Password">
-    <button id="loginBtn">লগইন করুন</button>
+<div class="login-wrap" id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">Khaterbagh Admin</div>
+    <div class="login-sub">লগইন করে প্যানেলে প্রবেশ করুন</div>
+    <input type="email" class="login-input" id="loginEmail" placeholder="Email">
+    <input type="password" class="login-input" id="loginPassword" placeholder="Password">
+    <button class="login-btn" id="loginBtn">লগইন করুন</button>
+    <div class="login-err" id="loginError">ভুল ইমেইল অথবা পাসওয়ার্ড</div>
   </div>
 </div>
 
 <div id="adminApp">
 
+<div class="sidebar" id="sidebar">
+  <div class="sb-logo">Khaterbagh</div>
+  <div class="nav-sec">
+    <div class="nav-lbl">Main</div>
+    <div class="ni active" data-page="dashboard"><span class="ic">📊</span>Dashboard</div>
+    <div class="ni" data-page="incomplete"><span class="ic">⚠️</span>Incomplete Orders<span class="nb y" id="navIncompleteBadge" style="display:none;">0</span></div>
+  </div>
+  <div class="nav-sec">
+    <div class="nav-lbl">Orders</div>
+    <div class="ni" data-page="orders"><span class="ic">🧾</span>All Orders<span class="nb" id="navOrdersBadge" style="display:none;">0</span></div>
+  </div>
+  <div class="nav-sec">
+    <div class="nav-lbl">Products</div>
+    <div class="ni" data-page="products"><span class="ic">📦</span>Products</div>
+    <div class="ni" data-page="categories"><span class="ic">🏷️</span>Categories</div>
+    <div class="ni" data-page="couriers"><span class="ic">🚚</span>Couriers</div>
+  </div>
+  <div class="nav-sec">
+    <div class="nav-lbl">Customers</div>
+    <div class="ni" data-page="customers"><span class="ic">👥</span>Customers</div>
+  </div>
+</div>
+
 <div class="topbar">
-  <div class="brand">Khaterbagh Admin</div>
-  <div style="display:flex;align-items:center;gap:16px;">
-    <div class="bell-wrap" id="bellBtn">
-      🔔
-      <span class="bell-badge" id="bellBadge" style="display:none;">0</span>
-    </div>
-    <button class="icon-btn" id="logoutBtn" style="background:none;border:1px solid rgba(255,255,255,.3);color:#fff;">লগআউট</button>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <button class="menu-toggle" id="menuToggle">☰</button>
+    <div class="tb-title" id="pageTitle">Dashboard</div>
+  </div>
+  <div class="tb-right">
+    <div class="bell-wrap" id="bellBtn">🔔<span class="bell-badge" id="bellBadge" style="display:none;">0</span></div>
+    <button class="logout-link" id="logoutBtn">লগআউট</button>
   </div>
 </div>
 
-<div class="tabs">
-  <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
-  <button class="tab-btn" data-tab="products">Products</button>
-  <button class="tab-btn" data-tab="orders">Orders</button>
-  <button class="tab-btn" data-tab="customers">Customers</button>
-</div>
+<div class="main">
 
-<main>
-  <!-- Dashboard Tab -->
-  <div class="tab-content active" id="tab-dashboard">
-    <div class="stats-row">
-      <div class="stat-card"><div class="num" id="statPending">0</div><div class="lbl">Pending Orders</div></div>
-      <div class="stat-card"><div class="num" id="statApproved">0</div><div class="lbl">Approved</div></div>
-      <div class="stat-card"><div class="num" id="statProducts">0</div><div class="lbl">Total Products</div></div>
-      <div class="stat-card"><div class="num" id="statReturning">0</div><div class="lbl">Returning Customers</div></div>
+  <div class="page active" id="pg-dashboard">
+    <div class="stat-grid">
+      <div class="stat-card"><div class="n" id="statProcessing">0</div><div class="l">Processing</div></div>
+      <div class="stat-card"><div class="n" id="statPaymentPending">0</div><div class="l">Payment Pending</div></div>
+      <div class="stat-card"><div class="n" id="statOnHold">0</div><div class="l">On Hold</div></div>
+      <div class="stat-card"><div class="n" id="statDelivered">0</div><div class="l">Delivered</div></div>
+      <div class="stat-card"><div class="n" id="statCompleted">0</div><div class="l">Completed</div></div>
+      <div class="stat-card"><div class="n" id="statCanceled">0</div><div class="l">Canceled</div></div>
+      <div class="stat-card"><div class="n" id="statRevenue">৳0</div><div class="l">Total Revenue</div></div>
+      <div class="stat-card"><div class="n" id="statReturning">0</div><div class="l">Returning Customers</div></div>
     </div>
-    <div class="form-card">
-      <strong>স্বাগতম!</strong>
-      <p style="font-size:13px;color:var(--text-light);margin-top:6px;">
-        নতুন অর্ডার আসলে ঘণ্টা 🔔 বাজবে এবং নোটিফিকেশন দেখাবে। "Orders" ট্যাব থেকে অর্ডার approve/reject করুন।
-      </p>
+    <div class="card">
+      <h3>স্বাগতম!</h3>
+      <p style="font-size:13px;color:var(--muted);">নতুন অর্ডার আসলে ঘণ্টা 🔔 বাজবে। "All Orders" থেকে অর্ডার status/courier আপডেট করুন। "Incomplete Orders" এ যারা checkout শুরু করে শেষ করেনি তাদের দেখা যাবে।</p>
     </div>
   </div>
 
-  <!-- Products Tab -->
-  <div class="tab-content" id="tab-products">
-    <div class="form-card">
-      <h3 style="margin-bottom:10px;font-size:15px;" id="formTitle">নতুন পণ্য যোগ করুন</h3>
+  <div class="page" id="pg-incomplete">
+    <div class="toolbar">
+      <input type="text" id="incSearch" placeholder="ফোন/নাম দিয়ে খুঁজুন">
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Name</th><th>Phone</th><th>Address</th><th>Cart Items</th><th>Time</th><th>Action</th></tr></thead>
+        <tbody id="incTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="page" id="pg-orders">
+    <div class="status-tabs" id="statusTabs">
+      <div class="stab active" data-status="all">All</div>
+      <div class="stab" data-status="Processing">Processing</div>
+      <div class="stab" data-status="Payment Pending">Payment Pending</div>
+      <div class="stab" data-status="On Hold">On Hold</div>
+      <div class="stab" data-status="Invoiced">Invoiced</div>
+      <div class="stab" data-status="Delivered">Delivered</div>
+      <div class="stab" data-status="Completed">Completed</div>
+      <div class="stab" data-status="Canceled">Canceled</div>
+    </div>
+    <div class="toolbar">
+      <input type="text" id="oSearch" placeholder="Name/Invoice/Phone">
+      <select id="oCourierFilter"><option value="">All Couriers</option></select>
+      <input type="date" id="oDateFilter">
+      <button class="btn btn-outline btn-sm" id="oClearFilter">Clear</button>
+      <button class="btn btn-outline btn-sm" id="exportCsvBtn">⬇ CSV</button>
+      <button class="btn btn-outline btn-sm" id="bulkStatusBtn">Bulk Status</button>
+      <button class="btn btn-outline btn-sm" id="printSelectedBtn">🖨️ Print Selected</button>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th><input type="checkbox" id="selectAllOrders"></th>
+          <th>Invoice</th><th>Customer</th><th>Product</th><th>Total</th><th>Courier</th><th>Date</th><th>Status</th><th>Action</th>
+        </tr></thead>
+        <tbody id="orderTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="page" id="pg-products">
+    <div class="card">
+      <h3 id="productFormTitle">নতুন পণ্য যোগ করুন</h3>
       <div class="upload-zone" id="uploadZone">
-        <div id="galleryPreview" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:8px;"></div>
-        <div class="up-text" id="uploadText">📷 ছবি আপলোড করুন (একাধিক ছবি দেওয়া যাবে)</div>
+        <div class="gallery-preview" id="galleryPreview"></div>
+        <div id="uploadText">📷 ছবি আপলোড করুন (একাধিক ছবি)</div>
         <input type="file" id="fileInput" accept="image/*" multiple style="display:none;">
-        <div class="upload-progress" id="uploadProgress"><div class="upload-progress-bar" id="uploadProgressBar"></div></div>
-      </div>
-      <div class="form-group"><label>পণ্যের নাম</label><input type="text" id="pName"></div>
-      <div class="form-row">
-        <div class="form-group"><label>মূল্য (৳)</label><input type="number" id="pPrice"></div>
-        <div class="form-group"><label>পুরনো মূল্য (optional)</label><input type="number" id="pOldPrice"></div>
       </div>
       <div class="form-row">
-        <div class="form-group"><label>ক্যাটাগরি</label><input type="text" id="pCategory" placeholder="যেমন: Electronics"></div>
-        <div class="form-group"><label>স্টক সংখ্যা</label><input type="number" id="pStock" value="10"></div>
+        <div class="form-group"><label>পণ্যের নাম</label><input type="text" id="pName"></div>
+        <div class="form-group"><label>ক্যাটাগরি</label><select id="pCategory"></select></div>
       </div>
-      <div class="form-group"><label>বিবরণ</label><textarea id="pDesc" rows="2"></textarea></div>
-      <input type="hidden" id="editingId">
+      <div class="form-row">
+        <div class="form-group"><label>নিয়মিত মূল্য (৳)</label><input type="number" id="pRegular"></div>
+        <div class="form-group"><label>সেল মূল্য (৳)</label><input type="number" id="pSale"></div>
+        <div class="form-group"><label>স্টক</label><input type="number" id="pStock" value="10"></div>
+      </div>
+      <div class="form-group" style="margin-bottom:10px;"><label>বিবরণ</label><textarea id="pDesc" rows="2"></textarea></div>
+      <input type="hidden" id="editingProductId">
       <div style="display:flex;gap:8px;">
-        <button class="btn btn-primary" id="saveProductBtn">পণ্য সংরক্ষণ করুন</button>
-        <button class="btn btn-outline" id="cancelEditBtn" style="display:none;">বাতিল</button>
+        <button class="btn btn-primary" id="saveProductBtn">সংরক্ষণ করুন</button>
+        <button class="btn btn-outline" id="cancelProductEdit" style="display:none;">বাতিল</button>
       </div>
     </div>
 
-    <h3 style="margin:16px 0 10px;font-size:15px;">সব পণ্য (<span id="prodCount">0</span>)</h3>
-    <div id="productList"></div>
+    <div class="toolbar">
+      <input type="text" id="pSearch" placeholder="পণ্য খুঁজুন">
+      <select id="pCatFilter"><option value="">All Categories</option></select>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Image</th><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Ad Link</th><th>Action</th></tr></thead>
+        <tbody id="productTable"></tbody>
+      </table>
+    </div>
   </div>
 
-  <!-- Orders Tab -->
-  <div class="tab-content" id="tab-orders">
-    <div class="filter-chips" id="orderFilters">
-      <div class="chip active" data-filter="all">সব</div>
-      <div class="chip" data-filter="pending">Pending</div>
-      <div class="chip" data-filter="approved">Approved</div>
-      <div class="chip" data-filter="rejected">Rejected</div>
+  <div class="page" id="pg-categories">
+    <div class="card">
+      <h3>নতুন ক্যাটাগরি</h3>
+      <div class="form-row">
+        <div class="form-group"><label>নাম</label><input type="text" id="catName"></div>
+      </div>
+      <input type="hidden" id="editingCatId">
+      <button class="btn btn-primary" id="saveCatBtn">সংরক্ষণ করুন</button>
     </div>
-    <div id="orderList"></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Name</th><th>Action</th></tr></thead>
+        <tbody id="catTable"></tbody>
+      </table>
+    </div>
   </div>
-  <!-- Customers Tab -->
-  <div class="tab-content" id="tab-customers">
-    <h3 style="margin-bottom:10px;font-size:15px;">কাস্টমার তালিকা (<span id="custCount">0</span>)</h3>
-    <div id="customerList"></div>
+
+  <div class="page" id="pg-couriers">
+    <div class="card">
+      <h3>নতুন কুরিয়ার</h3>
+      <div class="form-row">
+        <div class="form-group"><label>নাম</label><input type="text" id="couName"></div>
+        <div class="form-group"><label>চার্জ (৳)</label><input type="number" id="couCharge"></div>
+      </div>
+      <input type="hidden" id="editingCouId">
+      <button class="btn btn-primary" id="saveCouBtn">সংরক্ষণ করুন</button>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Name</th><th>Charge</th><th>Action</th></tr></thead>
+        <tbody id="couTable"></tbody>
+      </table>
+    </div>
   </div>
-</main>
+
+  <div class="page" id="pg-customers">
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Name</th><th>Phone</th><th>Orders</th><th>Total Spent</th><th>Last Order</th></tr></thead>
+        <tbody id="custTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<div class="modal-overlay" id="orderModal">
+  <div class="modal-box">
+    <button class="modal-close" id="closeOrderModal">×</button>
+    <h3>Order Edit</h3>
+    <input type="hidden" id="eo-id">
+    <div class="form-row">
+      <div class="form-group"><label>Name</label><input type="text" id="eo-name"></div>
+      <div class="form-group"><label>Phone</label><input type="text" id="eo-phone"></div>
+    </div>
+    <div class="form-group" style="margin-bottom:10px;"><label>Address</label><textarea id="eo-address" rows="2"></textarea></div>
+    <div class="form-row">
+      <div class="form-group"><label>City</label>
+        <select id="eo-city"></select>
+      </div>
+      <div class="form-group"><label>Zone</label>
+        <select id="eo-zone"></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Courier</label>
+        <select id="eo-courier"></select>
+      </div>
+      <div class="form-group"><label>Status</label>
+        <select id="eo-status">
+          <option>Processing</option><option>Payment Pending</option><option>On Hold</option>
+          <option>Invoiced</option><option>Delivered</option><option>Completed</option><option>Canceled</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="saveOrderEditBtn">সংরক্ষণ করুন</button>
+  </div>
+</div>
 
 <div id="toast"></div>
-</div>
-
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -228,7 +326,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
   getFirestore, collection, addDoc, updateDoc, deleteDoc, doc,
-  onSnapshot, query, orderBy, serverTimestamp, where, getDocs
+  onSnapshot, query, orderBy, serverTimestamp, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -239,482 +337,605 @@ const firebaseConfig = {
   messagingSenderId: "315667360687",
   appId: "1:315667360687:web:c2c37922677b7488079d5a"
 };
-
 const CLOUDINARY_CLOUD_NAME = "jqkplosf";
 const CLOUDINARY_UPLOAD_PRESET = "khaterbagh-product";
+
+const BD_CITY_ZONES = {
+  'Dhaka': ['Mirpur','Dhanmondi','Gulshan','Uttara','Mohammadpur','Badda','Jatrabari','Old Dhaka','Tejgaon','Banani'],
+  'Chattogram': ['Agrabad','Nasirabad','Halishahar','Pahartali','Patenga','GEC Circle'],
+  'Khulna': ['Khalishpur','Sonadanga','Boyra','Daulatpur'],
+  'Rajshahi': ['Boalia','Shaheb Bazar','Rajpara','Motihar'],
+  'Sylhet': ['Zindabazar','Amberkhana','Shahporan','Tilagor'],
+  'Barisal': ['Sadar Road','Nathullabad','Band Road'],
+  'Rangpur': ['Jahaj Company More','Dhap','Modern More'],
+  'Mymensingh': ['Town Hall','Choto Bazar','Ganginarpar'],
+  'Comilla': ['Kandirpar','Race Course','Tomsom Bridge'],
+  'Narayanganj': ['Chashara','Fatullah','Siddhirganj'],
+  'Gazipur': ['Tongi','Joydebpur','Konabari']
+};
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// ---------- Auth ----------
-document.getElementById('loginBtn').addEventListener('click', async ()=>{
-  const email = document.getElementById('loginEmail').value.trim();
-  const password = document.getElementById('loginPassword').value;
-  const errorEl = document.getElementById('loginError');
-  errorEl.style.display = 'none';
-  try{
-    await signInWithEmailAndPassword(auth, email, password);
-  }catch(e){
-    errorEl.style.display = 'block';
-    console.error(e);
-  }
-});
-
-document.getElementById('logoutBtn').addEventListener('click', async ()=>{
-  await signOut(auth);
-});
-
-onAuthStateChanged(auth, (user)=>{
-  if(user){
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('adminApp').style.display = 'block';
-  }else{
-    document.getElementById('loginScreen').style.display = 'flex';
-    document.getElementById('adminApp').style.display = 'none';
-  }
-});
-
 function tk(n){ return "৳" + Number(n||0).toLocaleString('en-BD'); }
 function toast(msg){
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
+  t.textContent = msg; t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'), 2500);
 }
 
-// ---------- Tabs ----------
-document.querySelectorAll('.tab-btn').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
-  });
+document.getElementById('loginBtn').addEventListener('click', async ()=>{
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errEl = document.getElementById('loginError');
+  errEl.style.display = 'none';
+  try{ await signInWithEmailAndPassword(auth, email, password); }
+  catch(e){ errEl.style.display = 'block'; console.error(e); }
+});
+document.getElementById('logoutBtn').addEventListener('click', ()=>signOut(auth));
+onAuthStateChanged(auth, (user)=>{
+  document.getElementById('loginScreen').style.display = user ? 'none' : 'flex';
+  document.getElementById('adminApp').style.display = user ? 'block' : 'none';
 });
 
-// ---------- Beep sound (Web Audio API) ----------
+const pageTitles = {dashboard:'Dashboard', incomplete:'Incomplete Orders', orders:'All Orders', products:'Products', categories:'Categories', couriers:'Couriers', customers:'Customers'};
+document.querySelectorAll('.ni').forEach(item=>{
+  item.addEventListener('click', ()=>{
+    document.querySelectorAll('.ni').forEach(i=>i.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    item.classList.add('active');
+    document.getElementById('pg-'+item.dataset.page).classList.add('active');
+    document.getElementById('pageTitle').textContent = pageTitles[item.dataset.page];
+    document.getElementById('sidebar').classList.remove('open');
+  });
+});
+document.getElementById('menuToggle').addEventListener('click', ()=>{
+  document.getElementById('sidebar').classList.toggle('open');
+});
+document.getElementById('bellBtn').addEventListener('click', ()=>{
+  document.querySelector('.ni[data-page="orders"]').click();
+});
+
 function playBeep(){
   try{
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.type = 'sine';
-    osc.frequency.value = 880;
+    const osc = ctx.createOscillator(), gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type='sine'; osc.frequency.value=880;
     gain.gain.setValueAtTime(0.15, ctx.currentTime);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.25);
-  }catch(e){ console.error(e); }
+    osc.start(); osc.stop(ctx.currentTime+0.25);
+  }catch(e){}
 }
 
-// ---------- Cloudinary Upload (multi-image) ----------
-let uploadedImages = [];
-document.getElementById('uploadZone').addEventListener('click', (e)=>{
-  if(e.target.closest('.remove-img-btn')) return;
-  document.getElementById('fileInput').click();
+let categories = [];
+onSnapshot(query(collection(db,'categories'), orderBy('name')), (snap)=>{
+  categories = [];
+  snap.forEach(d=>categories.push({id:d.id, ...d.data()}));
+  renderCategories();
+  populateCategoryDropdowns();
 });
+document.getElementById('saveCatBtn').addEventListener('click', async ()=>{
+  const name = document.getElementById('catName').value.trim();
+  if(!name){ toast('নাম দিন'); return; }
+  const editId = document.getElementById('editingCatId').value;
+  try{
+    if(editId) await updateDoc(doc(db,'categories',editId), {name});
+    else await addDoc(collection(db,'categories'), {name});
+    document.getElementById('catName').value='';
+    document.getElementById('editingCatId').value='';
+    toast('সংরক্ষিত হয়েছে');
+  }catch(e){ console.error(e); toast('সমস্যা হয়েছে'); }
+});
+function renderCategories(){
+  const tb = document.getElementById('catTable');
+  if(categories.length===0){ tb.innerHTML = '<tr><td colspan="2" class="empty-row">কোনো ক্যাটাগরি নেই</td></tr>'; return; }
+  tb.innerHTML = categories.map(c=>`
+    <tr><td>${c.name}</td><td>
+      <button class="btn btn-outline btn-sm edit-cat" data-id="${c.id}">Edit</button>
+      <button class="btn btn-danger btn-sm del-cat" data-id="${c.id}">Delete</button>
+    </td></tr>
+  `).join('');
+  tb.querySelectorAll('.edit-cat').forEach(b=>b.addEventListener('click', ()=>{
+    const c = categories.find(x=>x.id===b.dataset.id);
+    document.getElementById('catName').value = c.name;
+    document.getElementById('editingCatId').value = c.id;
+    document.querySelector('.ni[data-page="categories"]').click();
+  }));
+  tb.querySelectorAll('.del-cat').forEach(b=>b.addEventListener('click', async ()=>{
+    if(!confirm('Delete this category?')) return;
+    await deleteDoc(doc(db,'categories',b.dataset.id));
+    toast('মুছে ফেলা হয়েছে');
+  }));
+}
+function populateCategoryDropdowns(){
+  const opts = categories.map(c=>`<option value="${c.name}">${c.name}</option>`).join('');
+  document.getElementById('pCategory').innerHTML = '<option value="">নির্বাচন করুন</option>' + opts;
+  document.getElementById('pCatFilter').innerHTML = '<option value="">All Categories</option>' + opts;
+  renderProductTable();
+}
+
+let couriers = [];
+onSnapshot(query(collection(db,'couriers'), orderBy('name')), (snap)=>{
+  couriers = [];
+  snap.forEach(d=>couriers.push({id:d.id, ...d.data()}));
+  renderCouriers();
+  populateCourierDropdowns();
+});
+document.getElementById('saveCouBtn').addEventListener('click', async ()=>{
+  const name = document.getElementById('couName').value.trim();
+  const charge = Number(document.getElementById('couCharge').value)||0;
+  if(!name){ toast('নাম দিন'); return; }
+  const editId = document.getElementById('editingCouId').value;
+  try{
+    if(editId) await updateDoc(doc(db,'couriers',editId), {name, charge});
+    else await addDoc(collection(db,'couriers'), {name, charge});
+    document.getElementById('couName').value=''; document.getElementById('couCharge').value='';
+    document.getElementById('editingCouId').value='';
+    toast('সংরক্ষিত হয়েছে');
+  }catch(e){ console.error(e); toast('সমস্যা হয়েছে'); }
+});
+function renderCouriers(){
+  const tb = document.getElementById('couTable');
+  if(couriers.length===0){ tb.innerHTML = '<tr><td colspan="3" class="empty-row">কোনো কুরিয়ার নেই</td></tr>'; return; }
+  tb.innerHTML = couriers.map(c=>`
+    <tr><td>${c.name}</td><td>${tk(c.charge)}</td><td>
+      <button class="btn btn-outline btn-sm edit-cou" data-id="${c.id}">Edit</button>
+      <button class="btn btn-danger btn-sm del-cou" data-id="${c.id}">Delete</button>
+    </td></tr>
+  `).join('');
+  tb.querySelectorAll('.edit-cou').forEach(b=>b.addEventListener('click', ()=>{
+    const c = couriers.find(x=>x.id===b.dataset.id);
+    document.getElementById('couName').value = c.name;
+    document.getElementById('couCharge').value = c.charge;
+    document.getElementById('editingCouId').value = c.id;
+    document.querySelector('.ni[data-page="couriers"]').click();
+  }));
+  tb.querySelectorAll('.del-cou').forEach(b=>b.addEventListener('click', async ()=>{
+    if(!confirm('Delete this courier?')) return;
+    await deleteDoc(doc(db,'couriers',b.dataset.id));
+    toast('মুছে ফেলা হয়েছে');
+  }));
+}
+function populateCourierDropdowns(){
+  const opts = couriers.map(c=>`<option value="${c.name}">${c.name}</option>`).join('');
+  document.getElementById('oCourierFilter').innerHTML = '<option value="">All Couriers</option>' + opts;
+  document.getElementById('eo-courier').innerHTML = '<option value="">নির্বাচন করুন</option>' + opts;
+}
+document.getElementById('eo-city').innerHTML = '<option value="">Select City</option>' + Object.keys(BD_CITY_ZONES).map(c=>`<option>${c}</option>`).join('');
+document.getElementById('eo-city').addEventListener('change', (e)=>{
+  const zones = BD_CITY_ZONES[e.target.value] || [];
+  document.getElementById('eo-zone').innerHTML = '<option value="">Select Zone</option>' + zones.map(z=>`<option>${z}</option>`).join('');
+});
+
+let uploadedImages = [];
+document.getElementById('uploadZone').addEventListener('click', ()=>document.getElementById('fileInput').click());
 document.getElementById('fileInput').addEventListener('change', async (e)=>{
   const files = Array.from(e.target.files);
-  if(files.length === 0) return;
-
-  const progressWrap = document.getElementById('uploadProgress');
-  const progressBar = document.getElementById('uploadProgressBar');
-  progressWrap.style.display = 'block';
+  if(files.length===0) return;
   document.getElementById('uploadText').textContent = `আপলোড হচ্ছে... (0/${files.length})`;
-
   let done = 0;
   for(const file of files){
     await new Promise((resolve)=>{
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+      const fd = new FormData();
+      fd.append('file', file); fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
       const xhr = new XMLHttpRequest();
       xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`);
-      xhr.upload.onprogress = (ev)=>{
-        if(ev.lengthComputable) progressBar.style.width = ((ev.loaded/ev.total)*100)+'%';
-      };
       xhr.onload = ()=>{
-        if(xhr.status === 200){
+        if(xhr.status===200){
           const data = JSON.parse(xhr.responseText);
-          uploadedImages.push(data.secure_url.replace('/upload/', '/upload/f_auto,q_auto/'));
-        }else{
-          toast('একটি ছবি আপলোড ব্যর্থ হয়েছে');
-        }
+          uploadedImages.push(data.secure_url.replace('/upload/','/upload/f_auto,q_auto/'));
+        }else{ toast('একটি ছবি আপলোড ব্যর্থ হয়েছে'); }
         done++;
         document.getElementById('uploadText').textContent = `আপলোড হচ্ছে... (${done}/${files.length})`;
         resolve();
       };
       xhr.onerror = ()=>{ toast('আপলোড এরর'); resolve(); };
-      xhr.send(formData);
+      xhr.send(fd);
     });
   }
-  progressWrap.style.display = 'none';
   document.getElementById('uploadText').textContent = '📷 আরও ছবি যোগ করুন';
   renderGalleryPreview();
 });
-
 function renderGalleryPreview(){
-  const wrap = document.getElementById('galleryPreview');
-  wrap.innerHTML = uploadedImages.map((url,idx)=>`
+  document.getElementById('galleryPreview').innerHTML = uploadedImages.map((url,idx)=>`
     <div style="position:relative;">
-      <img src="${url}" style="width:60px;height:60px;object-fit:cover;border-radius:6px;">
-      <button class="remove-img-btn" data-idx="${idx}" style="position:absolute;top:-6px;right:-6px;background:var(--danger);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:11px;cursor:pointer;">×</button>
-    </div>
-  `).join('');
-  wrap.querySelectorAll('.remove-img-btn').forEach(btn=>{
-    btn.addEventListener('click', (e)=>{
-      e.stopPropagation();
-      uploadedImages.splice(Number(btn.dataset.idx),1);
-      renderGalleryPreview();
-    });
-  });
+      <img src="${url}">
+      <button class="rm-img" data-idx="${idx}" style="position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;border:none;border-radius:50%;width:16px;height:16px;font-size:10px;">×</button>
+    </div>`).join('');
+  document.querySelectorAll('.rm-img').forEach(b=>b.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    uploadedImages.splice(Number(b.dataset.idx),1);
+    renderGalleryPreview();
+  }));
 }
 
-// ---------- Product CRUD ----------
-document.getElementById('saveProductBtn').addEventListener('click', async ()=>{
-  const name = document.getElementById('pName').value.trim();
-  const price = Number(document.getElementById('pPrice').value);
-  const oldPrice = Number(document.getElementById('pOldPrice').value) || null;
-  const category = document.getElementById('pCategory').value.trim();
-  const stock = Number(document.getElementById('pStock').value) || 0;
-  const description = document.getElementById('pDesc').value.trim();
-  const editingId = document.getElementById('editingId').value;
-
-  if(!name || !price){
-    toast('নাম এবং মূল্য পূরণ করুন');
-    return;
-  }
-
-  const productData = {
-    name, price, oldPrice, category, stock, description,
-    images: uploadedImages,
-    image: uploadedImages[0] || null, // first image for storefront card/backward-compat
-  };
-
-  try{
-    if(editingId){
-      await updateDoc(doc(db,'products',editingId), productData);
-      toast('পণ্য আপডেট হয়েছে');
-    }else{
-      productData.createdAt = serverTimestamp();
-      await addDoc(collection(db,'products'), productData);
-      toast('পণ্য যোগ হয়েছে');
-    }
-    resetForm();
-  }catch(e){
-    console.error(e);
-    toast('সমস্যা হয়েছে, আবার চেষ্টা করুন');
-  }
-});
-
-function resetForm(){
-  document.getElementById('pName').value = '';
-  document.getElementById('pPrice').value = '';
-  document.getElementById('pOldPrice').value = '';
-  document.getElementById('pCategory').value = '';
-  document.getElementById('pStock').value = '10';
-  document.getElementById('pDesc').value = '';
-  document.getElementById('editingId').value = '';
-  uploadedImages = [];
-  renderGalleryPreview();
-  document.getElementById('uploadText').textContent = '📷 ছবি আপলোড করুন (একাধিক ছবি দেওয়া যাবে)';
-  document.getElementById('formTitle').textContent = 'নতুন পণ্য যোগ করুন';
-  document.getElementById('cancelEditBtn').style.display = 'none';
-}
-document.getElementById('cancelEditBtn').addEventListener('click', resetForm);
-
-function editProduct(p){
-  document.getElementById('editingId').value = p.id;
-  document.getElementById('pName').value = p.name || '';
-  document.getElementById('pPrice').value = p.price || '';
-  document.getElementById('pOldPrice').value = p.oldPrice || '';
-  document.getElementById('pCategory').value = p.category || '';
-  document.getElementById('pStock').value = p.stock || 0;
-  document.getElementById('pDesc').value = p.description || '';
-  uploadedImages = p.images && p.images.length ? [...p.images] : (p.image ? [p.image] : []);
-  renderGalleryPreview();
-  document.getElementById('formTitle').textContent = 'পণ্য এডিট করুন';
-  document.getElementById('cancelEditBtn').style.display = 'inline-block';
-  document.querySelector('[data-tab="products"]').click();
-  window.scrollTo({top:0, behavior:'smooth'});
-}
-
-async function deleteProduct(id){
-  if(!confirm('এই পণ্যটি মুছে ফেলতে চান?')) return;
-  try{
-    await deleteDoc(doc(db,'products',id));
-    toast('পণ্য মুছে ফেলা হয়েছে');
-  }catch(e){
-    console.error(e);
-    toast('মুছতে সমস্যা হয়েছে');
-  }
-}
-
-// Real-time products listener
 let allProducts = [];
 onSnapshot(query(collection(db,'products'), orderBy('createdAt','desc')), (snap)=>{
   allProducts = [];
-  snap.forEach(d=>{
-    const p = d.data();
-    p.id = d.id;
-    allProducts.push(p);
-  });
-  renderProductList();
-  document.getElementById('statProducts').textContent = allProducts.length;
+  snap.forEach(d=>allProducts.push({id:d.id, ...d.data()}));
+  renderProductTable();
 });
 
-function renderProductList(){
-  const list = document.getElementById('productList');
-  document.getElementById('prodCount').textContent = allProducts.length;
-  if(allProducts.length === 0){
-    list.innerHTML = `<div class="empty-msg">এখনো কোনো পণ্য যোগ করা হয়নি</div>`;
-    return;
-  }
-  list.innerHTML = allProducts.map(p=>`
-    <div class="prod-row">
-      <img src="${p.image||''}" alt="">
-      <div class="prod-info">
-        <div class="pname">${p.name||'Untitled'}</div>
-        <div class="pmeta">${tk(p.price)} • ${p.category||'—'} • Stock: <span class="${(p.stock||0) <= 3 ? 'low-stock' : ''}">${p.stock||0}${(p.stock||0) <= 3 ? ' ⚠️ কম আছে' : ''}</span></div>
-      </div>
-      <div class="prod-actions">
-        <button class="icon-btn edit-btn" data-id="${p.id}">Edit</button>
-        <button class="icon-btn delete-btn" data-id="${p.id}" style="color:var(--danger);">Delete</button>
-      </div>
-    </div>
-  `).join('');
+document.getElementById('saveProductBtn').addEventListener('click', async ()=>{
+  const name = document.getElementById('pName').value.trim();
+  const regular = Number(document.getElementById('pRegular').value)||0;
+  const sale = Number(document.getElementById('pSale').value)||0;
+  const category = document.getElementById('pCategory').value;
+  const stock = Number(document.getElementById('pStock').value)||0;
+  const description = document.getElementById('pDesc').value.trim();
+  const editId = document.getElementById('editingProductId').value;
+  if(!name || !regular){ toast('নাম এবং মূল্য পূরণ করুন'); return; }
 
-  list.querySelectorAll('.edit-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const p = allProducts.find(x=>x.id===btn.dataset.id);
-      if(p) editProduct(p);
-    });
+  const data = {
+    name, regular, sale: sale||null, category, stock, description,
+    images: uploadedImages, image: uploadedImages[0] || null,
+    price: sale || regular, oldPrice: sale ? regular : null,
+  };
+  try{
+    if(editId) await updateDoc(doc(db,'products',editId), data);
+    else{ data.createdAt = serverTimestamp(); await addDoc(collection(db,'products'), data); }
+    resetProductForm();
+    toast('সংরক্ষিত হয়েছে');
+  }catch(e){ console.error(e); toast('সমস্যা হয়েছে'); }
+});
+function resetProductForm(){
+  document.getElementById('pName').value=''; document.getElementById('pRegular').value='';
+  document.getElementById('pSale').value=''; document.getElementById('pCategory').value='';
+  document.getElementById('pStock').value='10'; document.getElementById('pDesc').value='';
+  document.getElementById('editingProductId').value='';
+  uploadedImages = []; renderGalleryPreview();
+  document.getElementById('productFormTitle').textContent = 'নতুন পণ্য যোগ করুন';
+  document.getElementById('cancelProductEdit').style.display = 'none';
+}
+document.getElementById('cancelProductEdit').addEventListener('click', resetProductForm);
+document.getElementById('pSearch').addEventListener('input', renderProductTable);
+document.getElementById('pCatFilter').addEventListener('change', renderProductTable);
+
+function renderProductTable(){
+  const tb = document.getElementById('productTable');
+  if(!tb) return;
+  const search = (document.getElementById('pSearch').value||'').toLowerCase();
+  const catF = document.getElementById('pCatFilter').value;
+  const list = allProducts.filter(p=>{
+    if(search && !(p.name||'').toLowerCase().includes(search)) return false;
+    if(catF && p.category!==catF) return false;
+    return true;
   });
-  list.querySelectorAll('.delete-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=> deleteProduct(btn.dataset.id));
-  });
+  if(list.length===0){ tb.innerHTML = '<tr><td colspan="7" class="empty-row">কোনো পণ্য নেই</td></tr>'; return; }
+  tb.innerHTML = list.map(p=>`
+    <tr>
+      <td><img src="${p.image||''}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;"></td>
+      <td>${p.name}</td>
+      <td>${p.category||'—'}</td>
+      <td>${tk(p.sale||p.regular)}${p.sale?` <s style="color:var(--muted);">${tk(p.regular)}</s>`:''}</td>
+      <td style="${(p.stock||0)<=3?'color:var(--red);font-weight:600;':''}">${p.stock||0}</td>
+      <td><button class="btn btn-outline btn-sm copy-link" data-id="${p.id}">🔗 Copy</button></td>
+      <td>
+        <button class="btn btn-outline btn-sm edit-prod" data-id="${p.id}">Edit</button>
+        <button class="btn btn-danger btn-sm del-prod" data-id="${p.id}">Delete</button>
+      </td>
+    </tr>
+  `).join('');
+  tb.querySelectorAll('.copy-link').forEach(b=>b.addEventListener('click', ()=>{
+    const link = 'https://khaterbagh.com/index.html?product=' + b.dataset.id;
+    navigator.clipboard.writeText(link).then(()=>toast('Ad link কপি হয়েছে'));
+  }));
+  tb.querySelectorAll('.edit-prod').forEach(b=>b.addEventListener('click', ()=>{
+    const p = allProducts.find(x=>x.id===b.dataset.id);
+    document.getElementById('editingProductId').value = p.id;
+    document.getElementById('pName').value = p.name||'';
+    document.getElementById('pRegular').value = p.regular||'';
+    document.getElementById('pSale').value = p.sale||'';
+    document.getElementById('pCategory').value = p.category||'';
+    document.getElementById('pStock').value = p.stock||0;
+    document.getElementById('pDesc').value = p.description||'';
+    uploadedImages = p.images && p.images.length ? [...p.images] : (p.image?[p.image]:[]);
+    renderGalleryPreview();
+    document.getElementById('productFormTitle').textContent = 'পণ্য এডিট করুন';
+    document.getElementById('cancelProductEdit').style.display = 'inline-block';
+    document.querySelector('.ni[data-page="products"]').click();
+    window.scrollTo({top:0,behavior:'smooth'});
+  }));
+  tb.querySelectorAll('.del-prod').forEach(b=>b.addEventListener('click', async ()=>{
+    if(!confirm('এই পণ্যটি মুছে ফেলতে চান?')) return;
+    await deleteDoc(doc(db,'products',b.dataset.id));
+    toast('মুছে ফেলা হয়েছে');
+  }));
 }
 
-// ---------- Orders ----------
 let allOrders = [];
-let orderFilter = 'all';
-let firstLoad = true;
+let firstOrderLoad = true;
 let knownOrderIds = new Set();
+let curStatusFilter = 'all';
 
 onSnapshot(query(collection(db,'orders'), orderBy('createdAt','desc')), (snap)=>{
   allOrders = [];
-  let newOrderCame = false;
+  let newCame = false;
   snap.forEach(d=>{
-    const o = d.data();
-    o.id = d.id;
+    const o = {id:d.id, ...d.data()};
     allOrders.push(o);
-    if(!firstLoad && !knownOrderIds.has(o.id)){
-      newOrderCame = true;
-    }
+    if(!firstOrderLoad && !knownOrderIds.has(o.id)) newCame = true;
     knownOrderIds.add(o.id);
   });
-
-  if(newOrderCame){
-    playBeep();
-    toast('🔔 নতুন অর্ডার এসেছে!');
-  }
-  firstLoad = false;
-
-  renderOrderList();
-  updateStats();
-  renderCustomerList();
+  if(newCame){ playBeep(); toast('🔔 নতুন অর্ডার এসেছে!'); }
+  firstOrderLoad = false;
+  renderOrderTable();
+  updateDashboardStats();
+  renderCustomerTable();
 });
 
-function renderCustomerList(){
-  const customerMap = {};
-  allOrders.forEach(o=>{
-    if(!o.phone) return;
-    if(!customerMap[o.phone]){
-      customerMap[o.phone] = {
-        name: o.customerName,
-        phone: o.phone,
-        address: o.address,
-        orderCount: 0,
-        totalSpent: 0,
-        lastOrder: null
-      };
-    }
-    customerMap[o.phone].orderCount++;
-    if(o.status === 'approved') customerMap[o.phone].totalSpent += (o.total||0);
-    const orderDate = o.createdAt?.toDate ? o.createdAt.toDate() : new Date();
-    if(!customerMap[o.phone].lastOrder || orderDate > customerMap[o.phone].lastOrder){
-      customerMap[o.phone].lastOrder = orderDate;
-      customerMap[o.phone].name = o.customerName;
-      customerMap[o.phone].address = o.address;
-    }
-  });
-
-  const customers = Object.values(customerMap).sort((a,b)=>b.orderCount - a.orderCount);
-  document.getElementById('custCount').textContent = customers.length;
-  const list = document.getElementById('customerList');
-
-  if(customers.length === 0){
-    list.innerHTML = `<div class="empty-msg">এখনো কোনো কাস্টমার নেই</div>`;
-    return;
-  }
-
-  list.innerHTML = customers.map(c=>`
-    <div class="customer-card">
-      <div>
-        <div class="cname">${c.name || '—'} ${c.orderCount > 1 ? '<span class="returning-tag">পুরনো কাস্টমার</span>' : ''}</div>
-        <div class="cmeta">📞 ${c.phone} • ${c.orderCount} টি অর্ডার</div>
-      </div>
-      <div class="corders">${tk(c.totalSpent)}</div>
-    </div>
-  `).join('');
-}
-
-function updateStats(){
-  const pending = allOrders.filter(o=>o.status==='pending').length;
-  const approved = allOrders.filter(o=>o.status==='approved').length;
-  const returning = allOrders.filter(o=>o.isReturningCustomer).length;
-  document.getElementById('statPending').textContent = pending;
-  document.getElementById('statApproved').textContent = approved;
-  document.getElementById('statReturning').textContent = returning;
-
-  const bellBadge = document.getElementById('bellBadge');
-  if(pending > 0){
-    bellBadge.style.display = 'flex';
-    bellBadge.textContent = pending;
-  }else{
-    bellBadge.style.display = 'none';
-  }
-}
-
-document.querySelectorAll('#orderFilters .chip').forEach(chip=>{
-  chip.addEventListener('click', ()=>{
-    document.querySelectorAll('#orderFilters .chip').forEach(c=>c.classList.remove('active'));
-    chip.classList.add('active');
-    orderFilter = chip.dataset.filter;
-    renderOrderList();
+document.querySelectorAll('.stab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.stab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    curStatusFilter = tab.dataset.status;
+    renderOrderTable();
   });
 });
-
-document.getElementById('bellBtn').addEventListener('click', ()=>{
-  document.querySelector('[data-tab="orders"]').click();
-  document.querySelector('[data-filter="pending"]').click();
+document.getElementById('oSearch').addEventListener('input', renderOrderTable);
+document.getElementById('oCourierFilter').addEventListener('change', renderOrderTable);
+document.getElementById('oDateFilter').addEventListener('change', renderOrderTable);
+document.getElementById('oClearFilter').addEventListener('click', ()=>{
+  document.getElementById('oSearch').value=''; document.getElementById('oCourierFilter').value='';
+  document.getElementById('oDateFilter').value=''; renderOrderTable();
 });
 
-function renderOrderList(){
-  const list = document.getElementById('orderList');
-  let filtered = allOrders;
-  if(orderFilter !== 'all'){
-    filtered = allOrders.filter(o=>o.status===orderFilter);
-  }
+function getFilteredOrders(){
+  const search = (document.getElementById('oSearch').value||'').toLowerCase();
+  const courierF = document.getElementById('oCourierFilter').value;
+  const dateF = document.getElementById('oDateFilter').value;
+  return allOrders.filter(o=>{
+    if(curStatusFilter!=='all' && (o.status||'Processing')!==curStatusFilter) return false;
+    if(search){
+      const invoice = (o.id||'').slice(-6).toLowerCase();
+      const match = (o.customerName||'').toLowerCase().includes(search) || (o.phone||'').includes(search) || invoice.includes(search);
+      if(!match) return false;
+    }
+    if(courierF && o.courier!==courierF) return false;
+    if(dateF){
+      const d = o.createdAt && o.createdAt.toDate ? o.createdAt.toDate() : new Date();
+      const dStr = d.toISOString().split('T')[0];
+      if(dStr !== dateF) return false;
+    }
+    return true;
+  });
+}
 
-  if(filtered.length === 0){
-    list.innerHTML = `<div class="empty-msg">কোনো অর্ডার নেই</div>`;
-    return;
-  }
-
-  list.innerHTML = filtered.map(o=>{
+function renderOrderTable(){
+  const tb = document.getElementById('orderTable');
+  const list = getFilteredOrders();
+  if(list.length===0){ tb.innerHTML = '<tr><td colspan="9" class="empty-row">কোনো অর্ডার নেই</td></tr>'; return; }
+  tb.innerHTML = list.map(o=>{
     const shortId = o.id.slice(-6).toUpperCase();
-    const statusClass = o.status === 'approved' ? 'status-approved' : o.status === 'rejected' ? 'status-rejected' : 'status-pending';
-    const statusLabel = o.status === 'approved' ? 'Approved' : o.status === 'rejected' ? 'Rejected' : 'Pending';
+    const status = o.status || 'Processing';
+    const productSummary = (o.items||[]).map(i=>`${i.name} x${i.qty}`).join(', ');
+    const d = o.createdAt && o.createdAt.toDate ? o.createdAt.toDate() : new Date();
     return `
-      <div class="order-card">
-        <div class="order-head">
-          <div>
-            <span class="order-id">#${shortId}</span>
-            <span class="status-badge ${statusClass}">${statusLabel}</span>
-            ${o.isReturningCustomer ? '<span class="returning-tag">পুরনো কাস্টমার</span>' : ''}
-          </div>
-        </div>
-        <div class="order-detail">👤 ${o.customerName || '—'}</div>
-        <div class="order-detail">📞 ${o.phone || '—'}</div>
-        <div class="order-detail">📍 ${o.address || '—'}</div>
-        ${o.notes ? `<div class="order-detail">📝 ${o.notes}</div>` : ''}
-        <div class="order-items">
-          ${(o.items||[]).map(i=>`${i.name} × ${i.qty} — ${tk(i.price*i.qty)}`).join('<br>')}
-        </div>
-        <div class="order-total">Total: ${tk(o.total)}</div>
-        ${o.status === 'pending' ? `
-          <div class="order-actions">
-            <button class="btn btn-primary approve-btn" data-id="${o.id}">✓ Approve</button>
-            <button class="btn btn-danger reject-btn" data-id="${o.id}">✕ Reject</button>
-          </div>
-        ` : `
-          <div class="order-actions">
-            <button class="btn btn-outline print-btn" data-id="${o.id}">🖨️ Invoice Print</button>
-          </div>
-        `}
-      </div>
+      <tr>
+        <td><input type="checkbox" class="order-cb" value="${o.id}"></td>
+        <td>#${shortId}</td>
+        <td>${o.customerName||'—'}${o.isReturningCustomer?'<span class="returning-tag">পুরনো</span>':''}<br><span style="color:var(--muted);font-size:11px;">${o.phone||''}</span></td>
+        <td>${productSummary || '—'}</td>
+        <td>${tk(o.total)}</td>
+        <td>
+          <select class="courier-select" data-id="${o.id}">
+            <option value="">—</option>
+            ${couriers.map(c=>`<option value="${c.name}" ${o.courier===c.name?'selected':''}>${c.name}</option>`).join('')}
+          </select>
+        </td>
+        <td>${d.toLocaleDateString()}</td>
+        <td>
+          <select class="status-select" data-id="${o.id}">
+            ${['Processing','Payment Pending','On Hold','Invoiced','Delivered','Completed','Canceled'].map(s=>`<option value="${s}" ${status===s?'selected':''}>${s}</option>`).join('')}
+          </select>
+        </td>
+        <td>
+          <button class="btn btn-outline btn-sm edit-order" data-id="${o.id}">Edit</button>
+          <button class="btn btn-outline btn-sm print-order" data-id="${o.id}">🖨️</button>
+          <button class="btn btn-danger btn-sm del-order" data-id="${o.id}">Del</button>
+        </td>
+      </tr>
     `;
   }).join('');
 
-  list.querySelectorAll('.approve-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>updateOrderStatus(btn.dataset.id, 'approved'));
+  tb.querySelectorAll('.status-select').forEach(sel=>{
+    sel.addEventListener('change', ()=>updateOrder(sel.dataset.id, {status: sel.value}, true));
   });
-  list.querySelectorAll('.reject-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>updateOrderStatus(btn.dataset.id, 'rejected'));
+  tb.querySelectorAll('.courier-select').forEach(sel=>{
+    sel.addEventListener('change', ()=>updateOrder(sel.dataset.id, {courier: sel.value}, false));
   });
-  list.querySelectorAll('.print-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>printInvoice(btn.dataset.id));
-  });
+  tb.querySelectorAll('.edit-order').forEach(b=>b.addEventListener('click', ()=>openOrderEditModal(b.dataset.id)));
+  tb.querySelectorAll('.print-order').forEach(b=>b.addEventListener('click', ()=>printOrders([allOrders.find(o=>o.id===b.dataset.id)])));
+  tb.querySelectorAll('.del-order').forEach(b=>b.addEventListener('click', async ()=>{
+    if(!confirm('এই অর্ডার মুছে ফেলতে চান?')) return;
+    await deleteDoc(doc(db,'orders',b.dataset.id));
+    toast('মুছে ফেলা হয়েছে');
+  }));
 }
 
-function printInvoice(orderId){
-  const o = allOrders.find(x=>x.id===orderId);
-  if(!o) return;
-  const shortId = o.id.slice(-6).toUpperCase();
-  const win = window.open('', '_blank');
-  win.document.write(`
-    <html><head><title>Invoice #${shortId}</title>
-    <style>
-      body{font-family:Arial,sans-serif;padding:30px;color:#222;}
-      h1{color:#0f6e56;font-size:20px;margin-bottom:2px;}
-      .sub{color:#666;font-size:13px;margin-bottom:20px;}
-      table{width:100%;border-collapse:collapse;margin:16px 0;}
-      td,th{padding:8px;border-bottom:1px solid #eee;text-align:left;font-size:13px;}
-      .total-row{font-weight:bold;font-size:15px;}
-    </style></head><body>
-    <h1>Khaterbagh</h1>
-    <div class="sub">Invoice #${shortId} &mdash; ${new Date().toLocaleDateString()}</div>
-    <p><strong>Customer:</strong> ${o.customerName}<br>
-    <strong>Phone:</strong> ${o.phone}<br>
-    <strong>Address:</strong> ${o.address}</p>
-    <table>
-      <tr><th>Item</th><th>Qty</th><th>Price</th><th>Subtotal</th></tr>
-      ${(o.items||[]).map(i=>`<tr><td>${i.name}</td><td>${i.qty}</td><td>${tk(i.price)}</td><td>${tk(i.price*i.qty)}</td></tr>`).join('')}
-      <tr class="total-row"><td colspan="3">Total</td><td>${tk(o.total)}</td></tr>
-    </table>
-    <p style="margin-top:30px;font-size:12px;color:#888;">Thank you for shopping with Khaterbagh &mdash; 01928183469</p>
-    </body></html>
-  `);
-  win.document.close();
-  win.print();
-}
-
-async function updateOrderStatus(id, status){
+async function updateOrder(id, data, mayReduceInventory){
   try{
-    await updateDoc(doc(db,'orders',id), {status});
-
-    if(status === 'approved'){
+    await updateDoc(doc(db,'orders',id), data);
+    if(mayReduceInventory && data.status && (data.status==='Delivered' || data.status==='Completed')){
       const order = allOrders.find(o=>o.id===id);
-      if(order && order.items){
+      if(order && order.items && !order._stockReduced){
         for(const item of order.items){
           const product = allProducts.find(p=>p.id===item.id);
           if(product){
-            const newStock = Math.max(0, (product.stock||0) - item.qty);
-            await updateDoc(doc(db,'products',item.id), {stock: newStock});
+            const newStock = Math.max(0, (product.stock||0)-item.qty);
+            await updateDoc(doc(db,'products',item.id), {stock:newStock});
           }
         }
+        await updateDoc(doc(db,'orders',id), {_stockReduced:true});
       }
     }
-
-    toast(status === 'approved' ? 'অর্ডার Approve হয়েছে, স্টক আপডেট হয়েছে' : 'অর্ডার Reject হয়েছে');
-  }catch(e){
-    console.error(e);
-    toast('সমস্যা হয়েছে');
-  }
+    toast('আপডেট হয়েছে');
+  }catch(e){ console.error(e); toast('সমস্যা হয়েছে'); }
 }
+
+document.getElementById('selectAllOrders').addEventListener('change', (e)=>{
+  document.querySelectorAll('.order-cb').forEach(cb=>cb.checked = e.target.checked);
+});
+
+document.getElementById('bulkStatusBtn').addEventListener('click', async ()=>{
+  const ids = [...document.querySelectorAll('.order-cb:checked')].map(cb=>cb.value);
+  if(ids.length===0){ toast('অর্ডার সিলেক্ট করুন'); return; }
+  const newStatus = prompt('New status: Processing / Payment Pending / On Hold / Invoiced / Delivered / Completed / Canceled');
+  if(!newStatus) return;
+  const batch = writeBatch(db);
+  ids.forEach(id=>batch.update(doc(db,'orders',id), {status:newStatus}));
+  try{ await batch.commit(); toast(`${ids.length} টি অর্ডার আপডেট হয়েছে`); }
+  catch(e){ console.error(e); toast('সমস্যা হয়েছে'); }
+});
+
+document.getElementById('exportCsvBtn').addEventListener('click', ()=>{
+  const list = getFilteredOrders();
+  const rows = [['Invoice','Name','Phone','Address','Product','Total','Courier','Status','Date']];
+  list.forEach(o=>{
+    const d = o.createdAt && o.createdAt.toDate ? o.createdAt.toDate() : new Date();
+    rows.push([
+      '#'+o.id.slice(-6).toUpperCase(), o.customerName||'', o.phone||'', o.address||'',
+      (o.items||[]).map(i=>`${i.name} x${i.qty}`).join('; '), o.total||0, o.courier||'', o.status||'Processing', d.toLocaleDateString()
+    ]);
+  });
+  const csv = rows.map(r=>r.map(x=>`"${x}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
+  a.download = 'orders-'+new Date().toISOString().split('T')[0]+'.csv';
+  a.click();
+});
+
+document.getElementById('printSelectedBtn').addEventListener('click', ()=>{
+  const ids = [...document.querySelectorAll('.order-cb:checked')].map(cb=>cb.value);
+  const list = ids.length ? allOrders.filter(o=>ids.includes(o.id)) : [];
+  if(list.length===0){ toast('অর্ডার সিলেক্ট করুন'); return; }
+  printOrders(list);
+});
+
+function printOrders(list){
+  const w = window.open('','_blank');
+  const html = list.map(o=>{
+    const shortId = o.id.slice(-6).toUpperCase();
+    return `
+      <div style="padding:20px;border-bottom:2px dashed #ccc;">
+        <h2 style="color:#0f6e56;">Khaterbagh</h2>
+        <p>Invoice #${shortId} — ${new Date().toLocaleDateString()}</p>
+        <p><strong>Customer:</strong> ${o.customerName}<br><strong>Phone:</strong> ${o.phone}<br><strong>Address:</strong> ${o.address}</p>
+        <table style="width:100%;border-collapse:collapse;margin-top:10px;">
+          <tr><th style="border-bottom:1px solid #eee;text-align:left;padding:6px;">Item</th><th style="border-bottom:1px solid #eee;text-align:left;padding:6px;">Qty</th><th style="border-bottom:1px solid #eee;text-align:left;padding:6px;">Total</th></tr>
+          ${(o.items||[]).map(i=>`<tr><td style="padding:6px;">${i.name}</td><td style="padding:6px;">${i.qty}</td><td style="padding:6px;">${tk(i.price*i.qty)}</td></tr>`).join('')}
+        </table>
+        <p style="font-weight:bold;margin-top:8px;">Total: ${tk(o.total)}</p>
+      </div>
+    `;
+  }).join('');
+  w.document.write(`<html><head><title>Invoices</title></head><body style="font-family:Arial;">${html}</body></html>`);
+  w.document.close();
+  w.print();
+}
+
+function openOrderEditModal(id){
+  const o = allOrders.find(x=>x.id===id);
+  if(!o) return;
+  document.getElementById('eo-id').value = id;
+  document.getElementById('eo-name').value = o.customerName||'';
+  document.getElementById('eo-phone').value = o.phone||'';
+  document.getElementById('eo-address').value = o.address||'';
+  document.getElementById('eo-city').value = o.city||'';
+  document.getElementById('eo-city').dispatchEvent(new Event('change'));
+  setTimeout(()=>{ document.getElementById('eo-zone').value = o.zone||''; }, 50);
+  document.getElementById('eo-courier').value = o.courier||'';
+  document.getElementById('eo-status').value = o.status||'Processing';
+  document.getElementById('orderModal').classList.add('show');
+}
+document.getElementById('closeOrderModal').addEventListener('click', ()=>{
+  document.getElementById('orderModal').classList.remove('show');
+});
+document.getElementById('saveOrderEditBtn').addEventListener('click', async ()=>{
+  const id = document.getElementById('eo-id').value;
+  const data = {
+    customerName: document.getElementById('eo-name').value.trim(),
+    phone: document.getElementById('eo-phone').value.trim(),
+    address: document.getElementById('eo-address').value.trim(),
+    city: document.getElementById('eo-city').value,
+    zone: document.getElementById('eo-zone').value,
+    courier: document.getElementById('eo-courier').value,
+    status: document.getElementById('eo-status').value,
+  };
+  try{
+    await updateDoc(doc(db,'orders',id), data);
+    document.getElementById('orderModal').classList.remove('show');
+    toast('আপডেট হয়েছে');
+  }catch(e){ console.error(e); toast('সমস্যা হয়েছে'); }
+});
+
+function updateDashboardStats(){
+  const count = s => allOrders.filter(o=>(o.status||'Processing')===s).length;
+  document.getElementById('statProcessing').textContent = count('Processing');
+  document.getElementById('statPaymentPending').textContent = count('Payment Pending');
+  document.getElementById('statOnHold').textContent = count('On Hold');
+  document.getElementById('statDelivered').textContent = count('Delivered');
+  document.getElementById('statCompleted').textContent = count('Completed');
+  document.getElementById('statCanceled').textContent = count('Canceled');
+  const revenue = allOrders.filter(o=>['Delivered','Completed'].includes(o.status)).reduce((s,o)=>s+(o.total||0),0);
+  document.getElementById('statRevenue').textContent = tk(revenue);
+  const returningCount = allOrders.filter(o=>o.isReturningCustomer).length;
+  document.getElementById('statReturning').textContent = returningCount;
+
+  const pendingIshCount = allOrders.filter(o=>['Processing','Payment Pending'].includes(o.status||'Processing')).length;
+  const bellBadge = document.getElementById('bellBadge');
+  if(pendingIshCount>0){ bellBadge.style.display='flex'; bellBadge.textContent = pendingIshCount; }
+  else{ bellBadge.style.display='none'; }
+
+  const navOrdersBadge = document.getElementById('navOrdersBadge');
+  if(pendingIshCount>0){ navOrdersBadge.style.display='inline-block'; navOrdersBadge.textContent = pendingIshCount; }
+  else{ navOrdersBadge.style.display='none'; }
+}
+
+function renderCustomerTable(){
+  const map = {};
+  allOrders.forEach(o=>{
+    if(!o.phone) return;
+    if(!map[o.phone]) map[o.phone] = {name:o.customerName, phone:o.phone, count:0, spent:0, last:null};
+    map[o.phone].count++;
+    if(['Delivered','Completed'].includes(o.status)) map[o.phone].spent += (o.total||0);
+    const d = o.createdAt && o.createdAt.toDate ? o.createdAt.toDate() : new Date();
+    if(!map[o.phone].last || d>map[o.phone].last){ map[o.phone].last = d; map[o.phone].name = o.customerName; }
+  });
+  const customers = Object.values(map).sort((a,b)=>b.count-a.count);
+  const tb = document.getElementById('custTable');
+  if(customers.length===0){ tb.innerHTML = '<tr><td colspan="5" class="empty-row">কোনো কাস্টমার নেই</td></tr>'; return; }
+  tb.innerHTML = customers.map(c=>`
+    <tr><td>${c.name||'—'}</td><td>${c.phone}</td><td>${c.count}</td><td>${tk(c.spent)}</td><td>${c.last?c.last.toLocaleDateString():'—'}</td></tr>
+  `).join('');
+}
+
+let incompleteOrdersCache = [];
+onSnapshot(query(collection(db,'incomplete_orders'), orderBy('updatedAt','desc')), (snap)=>{
+  incompleteOrdersCache = [];
+  snap.forEach(d=>incompleteOrdersCache.push({id:d.id, ...d.data()}));
+  renderIncompleteTable();
+  const badge = document.getElementById('navIncompleteBadge');
+  if(incompleteOrdersCache.length>0){ badge.style.display='inline-block'; badge.textContent = incompleteOrdersCache.length; }
+  else{ badge.style.display='none'; }
+});
+function renderIncompleteTable(){
+  const search = (document.getElementById('incSearch') ? document.getElementById('incSearch').value : '').toLowerCase();
+  const filtered = incompleteOrdersCache.filter(o=>!search || (o.phone||'').includes(search) || (o.customerName||'').toLowerCase().includes(search));
+  const tb = document.getElementById('incTable');
+  if(filtered.length===0){ tb.innerHTML = '<tr><td colspan="6" class="empty-row">কোনো incomplete order নেই</td></tr>'; return; }
+  tb.innerHTML = filtered.map(o=>{
+    const items = (o.items||[]).map(i=>`${i.name} x${i.qty}`).join(', ');
+    const d = o.updatedAt && o.updatedAt.toDate ? o.updatedAt.toDate() : new Date();
+    return `<tr><td>${o.customerName||'—'}</td><td>${o.phone||'—'}</td><td>${o.address||'—'}</td><td>${items||'—'}</td><td>${d.toLocaleString()}</td>
+      <td><button class="btn btn-danger btn-sm del-inc" data-id="${o.id}">Delete</button></td></tr>`;
+  }).join('');
+  tb.querySelectorAll('.del-inc').forEach(b=>b.addEventListener('click', async ()=>{
+    await deleteDoc(doc(db,'incomplete_orders',b.dataset.id));
+  }));
+}
+document.getElementById('incSearch').addEventListener('input', renderIncompleteTable);
 </script>
 
 </body>
