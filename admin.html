@@ -91,15 +91,57 @@
   #toast.show{opacity:1;}
 
   @media(max-width:480px){.form-row{grid-template-columns:1fr;}}
+
+  /* Login screen */
+  .login-screen{position:fixed;inset:0;background:var(--primary-dark);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;}
+  .login-box{background:#fff;border-radius:14px;padding:30px 24px;max-width:340px;width:100%;}
+  .login-box h2{font-size:20px;margin-bottom:4px;color:var(--primary-dark);}
+  .login-box .sub{font-size:13px;color:var(--text-light);margin-bottom:20px;}
+  .login-box input{width:100%;padding:11px;border:1px solid var(--border);border-radius:8px;font-size:14px;margin-bottom:12px;}
+  .login-box button{width:100%;padding:12px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;}
+  .login-error{color:var(--danger);font-size:12px;margin-bottom:10px;display:none;}
+  #adminApp{display:none;}
+
+  /* Customers tab */
+  .customer-card{background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;}
+  .customer-card .cname{font-size:14px;font-weight:500;}
+  .customer-card .cmeta{font-size:12px;color:var(--text-light);}
+  .customer-card .corders{font-size:13px;font-weight:600;color:var(--primary);}
+
+  /* Low stock warning */
+  .low-stock{color:var(--danger);font-weight:600;}
+
+  /* Print invoice */
+  @media print{
+    body *{visibility:hidden;}
+    #printArea, #printArea *{visibility:visible;}
+    #printArea{position:absolute;top:0;left:0;width:100%;}
+  }
 </style>
 </head>
 <body>
 
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <h2>Khaterbagh Admin</h2>
+    <div class="sub">লগইন করে এডমিন প্যানেলে প্রবেশ করুন</div>
+    <div class="login-error" id="loginError">ভুল ইমেইল অথবা পাসওয়ার্ড</div>
+    <input type="email" id="loginEmail" placeholder="Email">
+    <input type="password" id="loginPassword" placeholder="Password">
+    <button id="loginBtn">লগইন করুন</button>
+  </div>
+</div>
+
+<div id="adminApp">
+
 <div class="topbar">
   <div class="brand">Khaterbagh Admin</div>
-  <div class="bell-wrap" id="bellBtn">
-    🔔
-    <span class="bell-badge" id="bellBadge" style="display:none;">0</span>
+  <div style="display:flex;align-items:center;gap:16px;">
+    <div class="bell-wrap" id="bellBtn">
+      🔔
+      <span class="bell-badge" id="bellBadge" style="display:none;">0</span>
+    </div>
+    <button class="icon-btn" id="logoutBtn" style="background:none;border:1px solid rgba(255,255,255,.3);color:#fff;">লগআউট</button>
   </div>
 </div>
 
@@ -107,6 +149,7 @@
   <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
   <button class="tab-btn" data-tab="products">Products</button>
   <button class="tab-btn" data-tab="orders">Orders</button>
+  <button class="tab-btn" data-tab="customers">Customers</button>
 </div>
 
 <main>
@@ -131,9 +174,9 @@
     <div class="form-card">
       <h3 style="margin-bottom:10px;font-size:15px;" id="formTitle">নতুন পণ্য যোগ করুন</h3>
       <div class="upload-zone" id="uploadZone">
-        <img id="previewImg" style="display:none;">
-        <div class="up-text" id="uploadText">📷 ছবি আপলোড করতে ক্লিক করুন</div>
-        <input type="file" id="fileInput" accept="image/*" style="display:none;">
+        <div id="galleryPreview" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:8px;"></div>
+        <div class="up-text" id="uploadText">📷 ছবি আপলোড করুন (একাধিক ছবি দেওয়া যাবে)</div>
+        <input type="file" id="fileInput" accept="image/*" multiple style="display:none;">
         <div class="upload-progress" id="uploadProgress"><div class="upload-progress-bar" id="uploadProgressBar"></div></div>
       </div>
       <div class="form-group"><label>পণ্যের নাম</label><input type="text" id="pName"></div>
@@ -167,12 +210,22 @@
     </div>
     <div id="orderList"></div>
   </div>
+  <!-- Customers Tab -->
+  <div class="tab-content" id="tab-customers">
+    <h3 style="margin-bottom:10px;font-size:15px;">কাস্টমার তালিকা (<span id="custCount">0</span>)</h3>
+    <div id="customerList"></div>
+  </div>
 </main>
 
 <div id="toast"></div>
+</div>
+
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
   getFirestore, collection, addDoc, updateDoc, deleteDoc, doc,
   onSnapshot, query, orderBy, serverTimestamp, where, getDocs
@@ -192,6 +245,35 @@ const CLOUDINARY_UPLOAD_PRESET = "khaterbagh-product";
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
+
+// ---------- Auth ----------
+document.getElementById('loginBtn').addEventListener('click', async ()=>{
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errorEl = document.getElementById('loginError');
+  errorEl.style.display = 'none';
+  try{
+    await signInWithEmailAndPassword(auth, email, password);
+  }catch(e){
+    errorEl.style.display = 'block';
+    console.error(e);
+  }
+});
+
+document.getElementById('logoutBtn').addEventListener('click', async ()=>{
+  await signOut(auth);
+});
+
+onAuthStateChanged(auth, (user)=>{
+  if(user){
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminApp').style.display = 'block';
+  }else{
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('adminApp').style.display = 'none';
+  }
+});
 
 function tk(n){ return "৳" + Number(n||0).toLocaleString('en-BD'); }
 function toast(msg){
@@ -227,59 +309,68 @@ function playBeep(){
   }catch(e){ console.error(e); }
 }
 
-// ---------- Cloudinary Upload ----------
-let uploadedImageUrl = '';
-document.getElementById('uploadZone').addEventListener('click', ()=>{
+// ---------- Cloudinary Upload (multi-image) ----------
+let uploadedImages = [];
+document.getElementById('uploadZone').addEventListener('click', (e)=>{
+  if(e.target.closest('.remove-img-btn')) return;
   document.getElementById('fileInput').click();
 });
 document.getElementById('fileInput').addEventListener('change', async (e)=>{
-  const file = e.target.files[0];
-  if(!file) return;
+  const files = Array.from(e.target.files);
+  if(files.length === 0) return;
 
   const progressWrap = document.getElementById('uploadProgress');
   const progressBar = document.getElementById('uploadProgressBar');
   progressWrap.style.display = 'block';
-  document.getElementById('uploadText').textContent = 'আপলোড হচ্ছে...';
+  document.getElementById('uploadText').textContent = `আপলোড হচ্ছে... (0/${files.length})`;
 
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-
-  try{
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`);
-    xhr.upload.onprogress = (ev)=>{
-      if(ev.lengthComputable){
-        const pct = (ev.loaded / ev.total) * 100;
-        progressBar.style.width = pct + '%';
-      }
-    };
-    xhr.onload = ()=>{
-      if(xhr.status === 200){
-        const data = JSON.parse(xhr.responseText);
-        // apply f_auto,q_auto for optimized delivery
-        uploadedImageUrl = data.secure_url.replace('/upload/', '/upload/f_auto,q_auto/');
-        document.getElementById('previewImg').src = uploadedImageUrl;
-        document.getElementById('previewImg').style.display = 'block';
-        document.getElementById('uploadText').textContent = 'ছবি আপলোড সম্পন্ন ✓';
-        progressWrap.style.display = 'none';
-      }else{
-        toast('ছবি আপলোড ব্যর্থ হয়েছে');
-        document.getElementById('uploadText').textContent = '📷 ছবি আপলোড করতে ক্লিক করুন';
-        progressWrap.style.display = 'none';
-      }
-    };
-    xhr.onerror = ()=>{
-      toast('আপলোড এরর - Cloudinary preset চেক করুন');
-      progressWrap.style.display = 'none';
-    };
-    xhr.send(formData);
-  }catch(err){
-    console.error(err);
-    toast('আপলোড এরর হয়েছে');
-    progressWrap.style.display = 'none';
+  let done = 0;
+  for(const file of files){
+    await new Promise((resolve)=>{
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`);
+      xhr.upload.onprogress = (ev)=>{
+        if(ev.lengthComputable) progressBar.style.width = ((ev.loaded/ev.total)*100)+'%';
+      };
+      xhr.onload = ()=>{
+        if(xhr.status === 200){
+          const data = JSON.parse(xhr.responseText);
+          uploadedImages.push(data.secure_url.replace('/upload/', '/upload/f_auto,q_auto/'));
+        }else{
+          toast('একটি ছবি আপলোড ব্যর্থ হয়েছে');
+        }
+        done++;
+        document.getElementById('uploadText').textContent = `আপলোড হচ্ছে... (${done}/${files.length})`;
+        resolve();
+      };
+      xhr.onerror = ()=>{ toast('আপলোড এরর'); resolve(); };
+      xhr.send(formData);
+    });
   }
+  progressWrap.style.display = 'none';
+  document.getElementById('uploadText').textContent = '📷 আরও ছবি যোগ করুন';
+  renderGalleryPreview();
 });
+
+function renderGalleryPreview(){
+  const wrap = document.getElementById('galleryPreview');
+  wrap.innerHTML = uploadedImages.map((url,idx)=>`
+    <div style="position:relative;">
+      <img src="${url}" style="width:60px;height:60px;object-fit:cover;border-radius:6px;">
+      <button class="remove-img-btn" data-idx="${idx}" style="position:absolute;top:-6px;right:-6px;background:var(--danger);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:11px;cursor:pointer;">×</button>
+    </div>
+  `).join('');
+  wrap.querySelectorAll('.remove-img-btn').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      uploadedImages.splice(Number(btn.dataset.idx),1);
+      renderGalleryPreview();
+    });
+  });
+}
 
 // ---------- Product CRUD ----------
 document.getElementById('saveProductBtn').addEventListener('click', async ()=>{
@@ -298,7 +389,8 @@ document.getElementById('saveProductBtn').addEventListener('click', async ()=>{
 
   const productData = {
     name, price, oldPrice, category, stock, description,
-    image: uploadedImageUrl || null,
+    images: uploadedImages,
+    image: uploadedImages[0] || null, // first image for storefront card/backward-compat
   };
 
   try{
@@ -325,9 +417,9 @@ function resetForm(){
   document.getElementById('pStock').value = '10';
   document.getElementById('pDesc').value = '';
   document.getElementById('editingId').value = '';
-  document.getElementById('previewImg').style.display = 'none';
-  document.getElementById('uploadText').textContent = '📷 ছবি আপলোড করতে ক্লিক করুন';
-  uploadedImageUrl = '';
+  uploadedImages = [];
+  renderGalleryPreview();
+  document.getElementById('uploadText').textContent = '📷 ছবি আপলোড করুন (একাধিক ছবি দেওয়া যাবে)';
   document.getElementById('formTitle').textContent = 'নতুন পণ্য যোগ করুন';
   document.getElementById('cancelEditBtn').style.display = 'none';
 }
@@ -341,11 +433,8 @@ function editProduct(p){
   document.getElementById('pCategory').value = p.category || '';
   document.getElementById('pStock').value = p.stock || 0;
   document.getElementById('pDesc').value = p.description || '';
-  uploadedImageUrl = p.image || '';
-  if(p.image){
-    document.getElementById('previewImg').src = p.image;
-    document.getElementById('previewImg').style.display = 'block';
-  }
+  uploadedImages = p.images && p.images.length ? [...p.images] : (p.image ? [p.image] : []);
+  renderGalleryPreview();
   document.getElementById('formTitle').textContent = 'পণ্য এডিট করুন';
   document.getElementById('cancelEditBtn').style.display = 'inline-block';
   document.querySelector('[data-tab="products"]').click();
@@ -388,7 +477,7 @@ function renderProductList(){
       <img src="${p.image||''}" alt="">
       <div class="prod-info">
         <div class="pname">${p.name||'Untitled'}</div>
-        <div class="pmeta">${tk(p.price)} • ${p.category||'—'} • Stock: ${p.stock||0}</div>
+        <div class="pmeta">${tk(p.price)} • ${p.category||'—'} • Stock: <span class="${(p.stock||0) <= 3 ? 'low-stock' : ''}">${p.stock||0}${(p.stock||0) <= 3 ? ' ⚠️ কম আছে' : ''}</span></div>
       </div>
       <div class="prod-actions">
         <button class="icon-btn edit-btn" data-id="${p.id}">Edit</button>
@@ -435,7 +524,52 @@ onSnapshot(query(collection(db,'orders'), orderBy('createdAt','desc')), (snap)=>
 
   renderOrderList();
   updateStats();
+  renderCustomerList();
 });
+
+function renderCustomerList(){
+  const customerMap = {};
+  allOrders.forEach(o=>{
+    if(!o.phone) return;
+    if(!customerMap[o.phone]){
+      customerMap[o.phone] = {
+        name: o.customerName,
+        phone: o.phone,
+        address: o.address,
+        orderCount: 0,
+        totalSpent: 0,
+        lastOrder: null
+      };
+    }
+    customerMap[o.phone].orderCount++;
+    if(o.status === 'approved') customerMap[o.phone].totalSpent += (o.total||0);
+    const orderDate = o.createdAt?.toDate ? o.createdAt.toDate() : new Date();
+    if(!customerMap[o.phone].lastOrder || orderDate > customerMap[o.phone].lastOrder){
+      customerMap[o.phone].lastOrder = orderDate;
+      customerMap[o.phone].name = o.customerName;
+      customerMap[o.phone].address = o.address;
+    }
+  });
+
+  const customers = Object.values(customerMap).sort((a,b)=>b.orderCount - a.orderCount);
+  document.getElementById('custCount').textContent = customers.length;
+  const list = document.getElementById('customerList');
+
+  if(customers.length === 0){
+    list.innerHTML = `<div class="empty-msg">এখনো কোনো কাস্টমার নেই</div>`;
+    return;
+  }
+
+  list.innerHTML = customers.map(c=>`
+    <div class="customer-card">
+      <div>
+        <div class="cname">${c.name || '—'} ${c.orderCount > 1 ? '<span class="returning-tag">পুরনো কাস্টমার</span>' : ''}</div>
+        <div class="cmeta">📞 ${c.phone} • ${c.orderCount} টি অর্ডার</div>
+      </div>
+      <div class="corders">${tk(c.totalSpent)}</div>
+    </div>
+  `).join('');
+}
 
 function updateStats(){
   const pending = allOrders.filter(o=>o.status==='pending').length;
@@ -506,7 +640,11 @@ function renderOrderList(){
             <button class="btn btn-primary approve-btn" data-id="${o.id}">✓ Approve</button>
             <button class="btn btn-danger reject-btn" data-id="${o.id}">✕ Reject</button>
           </div>
-        ` : ''}
+        ` : `
+          <div class="order-actions">
+            <button class="btn btn-outline print-btn" data-id="${o.id}">🖨️ Invoice Print</button>
+          </div>
+        `}
       </div>
     `;
   }).join('');
@@ -517,12 +655,61 @@ function renderOrderList(){
   list.querySelectorAll('.reject-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>updateOrderStatus(btn.dataset.id, 'rejected'));
   });
+  list.querySelectorAll('.print-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>printInvoice(btn.dataset.id));
+  });
+}
+
+function printInvoice(orderId){
+  const o = allOrders.find(x=>x.id===orderId);
+  if(!o) return;
+  const shortId = o.id.slice(-6).toUpperCase();
+  const win = window.open('', '_blank');
+  win.document.write(`
+    <html><head><title>Invoice #${shortId}</title>
+    <style>
+      body{font-family:Arial,sans-serif;padding:30px;color:#222;}
+      h1{color:#0f6e56;font-size:20px;margin-bottom:2px;}
+      .sub{color:#666;font-size:13px;margin-bottom:20px;}
+      table{width:100%;border-collapse:collapse;margin:16px 0;}
+      td,th{padding:8px;border-bottom:1px solid #eee;text-align:left;font-size:13px;}
+      .total-row{font-weight:bold;font-size:15px;}
+    </style></head><body>
+    <h1>Khaterbagh</h1>
+    <div class="sub">Invoice #${shortId} &mdash; ${new Date().toLocaleDateString()}</div>
+    <p><strong>Customer:</strong> ${o.customerName}<br>
+    <strong>Phone:</strong> ${o.phone}<br>
+    <strong>Address:</strong> ${o.address}</p>
+    <table>
+      <tr><th>Item</th><th>Qty</th><th>Price</th><th>Subtotal</th></tr>
+      ${(o.items||[]).map(i=>`<tr><td>${i.name}</td><td>${i.qty}</td><td>${tk(i.price)}</td><td>${tk(i.price*i.qty)}</td></tr>`).join('')}
+      <tr class="total-row"><td colspan="3">Total</td><td>${tk(o.total)}</td></tr>
+    </table>
+    <p style="margin-top:30px;font-size:12px;color:#888;">Thank you for shopping with Khaterbagh &mdash; 01928183469</p>
+    </body></html>
+  `);
+  win.document.close();
+  win.print();
 }
 
 async function updateOrderStatus(id, status){
   try{
     await updateDoc(doc(db,'orders',id), {status});
-    toast(status === 'approved' ? 'অর্ডার Approve হয়েছে' : 'অর্ডার Reject হয়েছে');
+
+    if(status === 'approved'){
+      const order = allOrders.find(o=>o.id===id);
+      if(order && order.items){
+        for(const item of order.items){
+          const product = allProducts.find(p=>p.id===item.id);
+          if(product){
+            const newStock = Math.max(0, (product.stock||0) - item.qty);
+            await updateDoc(doc(db,'products',item.id), {stock: newStock});
+          }
+        }
+      }
+    }
+
+    toast(status === 'approved' ? 'অর্ডার Approve হয়েছে, স্টক আপডেট হয়েছে' : 'অর্ডার Reject হয়েছে');
   }catch(e){
     console.error(e);
     toast('সমস্যা হয়েছে');
