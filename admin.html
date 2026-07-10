@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Khaterbagh - Admin Panel</title>
+<style>
+  :root{
+    --primary:#0f6e56;
+    --primary-dark:#085041;
+    --accent:#D85A30;
+    --bg:#f4f4f2;
+    --card-bg:#ffffff;
+    --text:#222;
+    --text-light:#666;
+    --border:#e5e5e0;
+    --danger:#E24B4A;
+    --warn:#EF9F27;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);}
+
+  /* Layout */
+  .topbar{background:var(--primary-dark);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;}
+  .topbar .brand{font-weight:700;font-size:17px;}
+  .bell-wrap{position:relative;cursor:pointer;font-size:20px;}
+  .bell-badge{position:absolute;top:-6px;right:-8px;background:var(--danger);color:#fff;font-size:10px;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;}
+
+  .tabs{display:flex;gap:0;background:var(--card-bg);border-bottom:1px solid var(--border);overflow-x:auto;}
+  .tab-btn{padding:12px 18px;background:none;border:none;font-size:14px;cursor:pointer;color:var(--text-light);border-bottom:2px solid transparent;white-space:nowrap;}
+  .tab-btn.active{color:var(--primary);border-color:var(--primary);font-weight:600;}
+
+  main{max-width:1000px;margin:0 auto;padding:16px;}
+  .tab-content{display:none;}
+  .tab-content.active{display:block;}
+
+  /* Stat cards */
+  .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px;}
+  .stat-card{background:var(--card-bg);border-radius:10px;padding:14px;border:1px solid var(--border);}
+  .stat-card .num{font-size:22px;font-weight:700;color:var(--primary);}
+  .stat-card .lbl{font-size:12px;color:var(--text-light);margin-top:2px;}
+
+  /* Product form */
+  .form-card{background:var(--card-bg);border-radius:10px;padding:16px;border:1px solid var(--border);margin-bottom:16px;}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+  .form-group{margin-bottom:10px;}
+  .form-group label{display:block;font-size:12px;color:var(--text-light);margin-bottom:4px;}
+  .form-group input,.form-group textarea,.form-group select{width:100%;padding:9px;border:1px solid var(--border);border-radius:6px;font-size:14px;}
+  .btn{padding:10px 18px;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;}
+  .btn-primary{background:var(--primary);color:#fff;}
+  .btn-danger{background:var(--danger);color:#fff;}
+  .btn-warn{background:var(--warn);color:#412402;}
+  .btn-outline{background:none;border:1px solid var(--border);color:var(--text);}
+
+  .upload-zone{border:2px dashed var(--border);border-radius:8px;padding:20px;text-align:center;cursor:pointer;margin-bottom:10px;position:relative;}
+  .upload-zone img{max-width:100px;max-height:100px;border-radius:6px;margin-bottom:6px;}
+  .upload-zone .up-text{font-size:13px;color:var(--text-light);}
+  .upload-progress{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:8px;display:none;}
+  .upload-progress-bar{height:100%;background:var(--primary);width:0%;transition:width .2s;}
+
+  /* Product list */
+  .prod-row{display:flex;gap:10px;align-items:center;background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px;}
+  .prod-row img{width:50px;height:50px;object-fit:cover;border-radius:6px;background:#eee;}
+  .prod-info{flex:1;}
+  .prod-info .pname{font-size:14px;font-weight:500;}
+  .prod-info .pmeta{font-size:12px;color:var(--text-light);}
+  .prod-actions{display:flex;gap:6px;}
+  .icon-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:6px 10px;cursor:pointer;font-size:13px;}
+
+  /* Order card */
+  .order-card{background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;}
+  .order-head{display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;}
+  .order-id{font-weight:600;font-size:14px;}
+  .status-badge{font-size:11px;padding:3px 9px;border-radius:12px;font-weight:600;}
+  .status-pending{background:#FAEEDA;color:#633806;}
+  .status-approved{background:#EAF3DE;color:#27500A;}
+  .status-rejected{background:#FCEBEB;color:#791F1F;}
+  .returning-tag{background:#E1F5EE;color:#085041;font-size:11px;padding:3px 9px;border-radius:12px;margin-left:6px;}
+  .order-detail{font-size:13px;color:var(--text-light);margin:3px 0;}
+  .order-items{font-size:13px;margin:8px 0;padding:8px;background:var(--bg);border-radius:6px;}
+  .order-total{font-weight:700;margin-top:6px;}
+  .order-actions{display:flex;gap:8px;margin-top:10px;}
+
+  .filter-chips{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;}
+  .chip{padding:6px 14px;border-radius:20px;background:var(--card-bg);border:1px solid var(--border);font-size:13px;cursor:pointer;white-space:nowrap;}
+  .chip.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+
+  .empty-msg{text-align:center;padding:40px;color:var(--text-light);font-size:14px;}
+
+  #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;}
+  #toast.show{opacity:1;}
+
+  @media(max-width:480px){.form-row{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Khaterbagh Admin</div>
+  <div class="bell-wrap" id="bellBtn">
+    🔔
+    <span class="bell-badge" id="bellBadge" style="display:none;">0</span>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+  <button class="tab-btn" data-tab="products">Products</button>
+  <button class="tab-btn" data-tab="orders">Orders</button>
+</div>
+
+<main>
+  <!-- Dashboard Tab -->
+  <div class="tab-content active" id="tab-dashboard">
+    <div class="stats-row">
+      <div class="stat-card"><div class="num" id="statPending">0</div><div class="lbl">Pending Orders</div></div>
+      <div class="stat-card"><div class="num" id="statApproved">0</div><div class="lbl">Approved</div></div>
+      <div class="stat-card"><div class="num" id="statProducts">0</div><div class="lbl">Total Products</div></div>
+      <div class="stat-card"><div class="num" id="statReturning">0</div><div class="lbl">Returning Customers</div></div>
+    </div>
+    <div class="form-card">
+      <strong>স্বাগতম!</strong>
+      <p style="font-size:13px;color:var(--text-light);margin-top:6px;">
+        নতুন অর্ডার আসলে ঘণ্টা 🔔 বাজবে এবং নোটিফিকেশন দেখাবে। "Orders" ট্যাব থেকে অর্ডার approve/reject করুন।
+      </p>
+    </div>
+  </div>
+
+  <!-- Products Tab -->
+  <div class="tab-content" id="tab-products">
+    <div class="form-card">
+      <h3 style="margin-bottom:10px;font-size:15px;" id="formTitle">নতুন পণ্য যোগ করুন</h3>
+      <div class="upload-zone" id="uploadZone">
+        <img id="previewImg" style="display:none;">
+        <div class="up-text" id="uploadText">📷 ছবি আপলোড করতে ক্লিক করুন</div>
+        <input type="file" id="fileInput" accept="image/*" style="display:none;">
+        <div class="upload-progress" id="uploadProgress"><div class="upload-progress-bar" id="uploadProgressBar"></div></div>
+      </div>
+      <div class="form-group"><label>পণ্যের নাম</label><input type="text" id="pName"></div>
+      <div class="form-row">
+        <div class="form-group"><label>মূল্য (৳)</label><input type="number" id="pPrice"></div>
+        <div class="form-group"><label>পুরনো মূল্য (optional)</label><input type="number" id="pOldPrice"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>ক্যাটাগরি</label><input type="text" id="pCategory" placeholder="যেমন: Electronics"></div>
+        <div class="form-group"><label>স্টক সংখ্যা</label><input type="number" id="pStock" value="10"></div>
+      </div>
+      <div class="form-group"><label>বিবরণ</label><textarea id="pDesc" rows="2"></textarea></div>
+      <input type="hidden" id="editingId">
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-primary" id="saveProductBtn">পণ্য সংরক্ষণ করুন</button>
+        <button class="btn btn-outline" id="cancelEditBtn" style="display:none;">বাতিল</button>
+      </div>
+    </div>
+
+    <h3 style="margin:16px 0 10px;font-size:15px;">সব পণ্য (<span id="prodCount">0</span>)</h3>
+    <div id="productList"></div>
+  </div>
+
+  <!-- Orders Tab -->
+  <div class="tab-content" id="tab-orders">
+    <div class="filter-chips" id="orderFilters">
+      <div class="chip active" data-filter="all">সব</div>
+      <div class="chip" data-filter="pending">Pending</div>
+      <div class="chip" data-filter="approved">Approved</div>
+      <div class="chip" data-filter="rejected">Rejected</div>
+    </div>
+    <div id="orderList"></div>
+  </div>
+</main>
+
+<div id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getFirestore, collection, addDoc, updateDoc, deleteDoc, doc,
+  onSnapshot, query, orderBy, serverTimestamp, where, getDocs
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAOgomvDbe8MzZYCb6itdBrDZ1r9MKjdCA",
+  authDomain: "khaterbag.firebaseapp.com",
+  projectId: "khaterbag",
+  storageBucket: "khaterbag.firebasestorage.app",
+  messagingSenderId: "315667360687",
+  appId: "1:315667360687:web:c2c37922677b7488079d5a"
+};
+
+const CLOUDINARY_CLOUD_NAME = "jqkplosf";
+const CLOUDINARY_UPLOAD_PRESET = "khaterbagh-product";
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+function tk(n){ return "৳" + Number(n||0).toLocaleString('en-BD'); }
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+// ---------- Tabs ----------
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ---------- Beep sound (Web Audio API) ----------
+function playBeep(){
+  try{
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.25);
+  }catch(e){ console.error(e); }
+}
+
+// ---------- Cloudinary Upload ----------
+let uploadedImageUrl = '';
+document.getElementById('uploadZone').addEventListener('click', ()=>{
+  document.getElementById('fileInput').click();
+});
+document.getElementById('fileInput').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+
+  const progressWrap = document.getElementById('uploadProgress');
+  const progressBar = document.getElementById('uploadProgressBar');
+  progressWrap.style.display = 'block';
+  document.getElementById('uploadText').textContent = 'আপলোড হচ্ছে...';
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+  try{
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`);
+    xhr.upload.onprogress = (ev)=>{
+      if(ev.lengthComputable){
+        const pct = (ev.loaded / ev.total) * 100;
+        progressBar.style.width = pct + '%';
+      }
+    };
+    xhr.onload = ()=>{
+      if(xhr.status === 200){
+        const data = JSON.parse(xhr.responseText);
+        // apply f_auto,q_auto for optimized delivery
+        uploadedImageUrl = data.secure_url.replace('/upload/', '/upload/f_auto,q_auto/');
+        document.getElementById('previewImg').src = uploadedImageUrl;
+        document.getElementById('previewImg').style.display = 'block';
+        document.getElementById('uploadText').textContent = 'ছবি আপলোড সম্পন্ন ✓';
+        progressWrap.style.display = 'none';
+      }else{
+        toast('ছবি আপলোড ব্যর্থ হয়েছে');
+        document.getElementById('uploadText').textContent = '📷 ছবি আপলোড করতে ক্লিক করুন';
+        progressWrap.style.display = 'none';
+      }
+    };
+    xhr.onerror = ()=>{
+      toast('আপলোড এরর - Cloudinary preset চেক করুন');
+      progressWrap.style.display = 'none';
+    };
+    xhr.send(formData);
+  }catch(err){
+    console.error(err);
+    toast('আপলোড এরর হয়েছে');
+    progressWrap.style.display = 'none';
+  }
+});
+
+// ---------- Product CRUD ----------
+document.getElementById('saveProductBtn').addEventListener('click', async ()=>{
+  const name = document.getElementById('pName').value.trim();
+  const price = Number(document.getElementById('pPrice').value);
+  const oldPrice = Number(document.getElementById('pOldPrice').value) || null;
+  const category = document.getElementById('pCategory').value.trim();
+  const stock = Number(document.getElementById('pStock').value) || 0;
+  const description = document.getElementById('pDesc').value.trim();
+  const editingId = document.getElementById('editingId').value;
+
+  if(!name || !price){
+    toast('নাম এবং মূল্য পূরণ করুন');
+    return;
+  }
+
+  const productData = {
+    name, price, oldPrice, category, stock, description,
+    image: uploadedImageUrl || null,
+  };
+
+  try{
+    if(editingId){
+      await updateDoc(doc(db,'products',editingId), productData);
+      toast('পণ্য আপডেট হয়েছে');
+    }else{
+      productData.createdAt = serverTimestamp();
+      await addDoc(collection(db,'products'), productData);
+      toast('পণ্য যোগ হয়েছে');
+    }
+    resetForm();
+  }catch(e){
+    console.error(e);
+    toast('সমস্যা হয়েছে, আবার চেষ্টা করুন');
+  }
+});
+
+function resetForm(){
+  document.getElementById('pName').value = '';
+  document.getElementById('pPrice').value = '';
+  document.getElementById('pOldPrice').value = '';
+  document.getElementById('pCategory').value = '';
+  document.getElementById('pStock').value = '10';
+  document.getElementById('pDesc').value = '';
+  document.getElementById('editingId').value = '';
+  document.getElementById('previewImg').style.display = 'none';
+  document.getElementById('uploadText').textContent = '📷 ছবি আপলোড করতে ক্লিক করুন';
+  uploadedImageUrl = '';
+  document.getElementById('formTitle').textContent = 'নতুন পণ্য যোগ করুন';
+  document.getElementById('cancelEditBtn').style.display = 'none';
+}
+document.getElementById('cancelEditBtn').addEventListener('click', resetForm);
+
+function editProduct(p){
+  document.getElementById('editingId').value = p.id;
+  document.getElementById('pName').value = p.name || '';
+  document.getElementById('pPrice').value = p.price || '';
+  document.getElementById('pOldPrice').value = p.oldPrice || '';
+  document.getElementById('pCategory').value = p.category || '';
+  document.getElementById('pStock').value = p.stock || 0;
+  document.getElementById('pDesc').value = p.description || '';
+  uploadedImageUrl = p.image || '';
+  if(p.image){
+    document.getElementById('previewImg').src = p.image;
+    document.getElementById('previewImg').style.display = 'block';
+  }
+  document.getElementById('formTitle').textContent = 'পণ্য এডিট করুন';
+  document.getElementById('cancelEditBtn').style.display = 'inline-block';
+  document.querySelector('[data-tab="products"]').click();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+async function deleteProduct(id){
+  if(!confirm('এই পণ্যটি মুছে ফেলতে চান?')) return;
+  try{
+    await deleteDoc(doc(db,'products',id));
+    toast('পণ্য মুছে ফেলা হয়েছে');
+  }catch(e){
+    console.error(e);
+    toast('মুছতে সমস্যা হয়েছে');
+  }
+}
+
+// Real-time products listener
+let allProducts = [];
+onSnapshot(query(collection(db,'products'), orderBy('createdAt','desc')), (snap)=>{
+  allProducts = [];
+  snap.forEach(d=>{
+    const p = d.data();
+    p.id = d.id;
+    allProducts.push(p);
+  });
+  renderProductList();
+  document.getElementById('statProducts').textContent = allProducts.length;
+});
+
+function renderProductList(){
+  const list = document.getElementById('productList');
+  document.getElementById('prodCount').textContent = allProducts.length;
+  if(allProducts.length === 0){
+    list.innerHTML = `<div class="empty-msg">এখনো কোনো পণ্য যোগ করা হয়নি</div>`;
+    return;
+  }
+  list.innerHTML = allProducts.map(p=>`
+    <div class="prod-row">
+      <img src="${p.image||''}" alt="">
+      <div class="prod-info">
+        <div class="pname">${p.name||'Untitled'}</div>
+        <div class="pmeta">${tk(p.price)} • ${p.category||'—'} • Stock: ${p.stock||0}</div>
+      </div>
+      <div class="prod-actions">
+        <button class="icon-btn edit-btn" data-id="${p.id}">Edit</button>
+        <button class="icon-btn delete-btn" data-id="${p.id}" style="color:var(--danger);">Delete</button>
+      </div>
+    </div>
+  `).join('');
+
+  list.querySelectorAll('.edit-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const p = allProducts.find(x=>x.id===btn.dataset.id);
+      if(p) editProduct(p);
+    });
+  });
+  list.querySelectorAll('.delete-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=> deleteProduct(btn.dataset.id));
+  });
+}
+
+// ---------- Orders ----------
+let allOrders = [];
+let orderFilter = 'all';
+let firstLoad = true;
+let knownOrderIds = new Set();
+
+onSnapshot(query(collection(db,'orders'), orderBy('createdAt','desc')), (snap)=>{
+  allOrders = [];
+  let newOrderCame = false;
+  snap.forEach(d=>{
+    const o = d.data();
+    o.id = d.id;
+    allOrders.push(o);
+    if(!firstLoad && !knownOrderIds.has(o.id)){
+      newOrderCame = true;
+    }
+    knownOrderIds.add(o.id);
+  });
+
+  if(newOrderCame){
+    playBeep();
+    toast('🔔 নতুন অর্ডার এসেছে!');
+  }
+  firstLoad = false;
+
+  renderOrderList();
+  updateStats();
+});
+
+function updateStats(){
+  const pending = allOrders.filter(o=>o.status==='pending').length;
+  const approved = allOrders.filter(o=>o.status==='approved').length;
+  const returning = allOrders.filter(o=>o.isReturningCustomer).length;
+  document.getElementById('statPending').textContent = pending;
+  document.getElementById('statApproved').textContent = approved;
+  document.getElementById('statReturning').textContent = returning;
+
+  const bellBadge = document.getElementById('bellBadge');
+  if(pending > 0){
+    bellBadge.style.display = 'flex';
+    bellBadge.textContent = pending;
+  }else{
+    bellBadge.style.display = 'none';
+  }
+}
+
+document.querySelectorAll('#orderFilters .chip').forEach(chip=>{
+  chip.addEventListener('click', ()=>{
+    document.querySelectorAll('#orderFilters .chip').forEach(c=>c.classList.remove('active'));
+    chip.classList.add('active');
+    orderFilter = chip.dataset.filter;
+    renderOrderList();
+  });
+});
+
+document.getElementById('bellBtn').addEventListener('click', ()=>{
+  document.querySelector('[data-tab="orders"]').click();
+  document.querySelector('[data-filter="pending"]').click();
+});
+
+function renderOrderList(){
+  const list = document.getElementById('orderList');
+  let filtered = allOrders;
+  if(orderFilter !== 'all'){
+    filtered = allOrders.filter(o=>o.status===orderFilter);
+  }
+
+  if(filtered.length === 0){
+    list.innerHTML = `<div class="empty-msg">কোনো অর্ডার নেই</div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(o=>{
+    const shortId = o.id.slice(-6).toUpperCase();
+    const statusClass = o.status === 'approved' ? 'status-approved' : o.status === 'rejected' ? 'status-rejected' : 'status-pending';
+    const statusLabel = o.status === 'approved' ? 'Approved' : o.status === 'rejected' ? 'Rejected' : 'Pending';
+    return `
+      <div class="order-card">
+        <div class="order-head">
+          <div>
+            <span class="order-id">#${shortId}</span>
+            <span class="status-badge ${statusClass}">${statusLabel}</span>
+            ${o.isReturningCustomer ? '<span class="returning-tag">পুরনো কাস্টমার</span>' : ''}
+          </div>
+        </div>
+        <div class="order-detail">👤 ${o.customerName || '—'}</div>
+        <div class="order-detail">📞 ${o.phone || '—'}</div>
+        <div class="order-detail">📍 ${o.address || '—'}</div>
+        ${o.notes ? `<div class="order-detail">📝 ${o.notes}</div>` : ''}
+        <div class="order-items">
+          ${(o.items||[]).map(i=>`${i.name} × ${i.qty} — ${tk(i.price*i.qty)}`).join('<br>')}
+        </div>
+        <div class="order-total">Total: ${tk(o.total)}</div>
+        ${o.status === 'pending' ? `
+          <div class="order-actions">
+            <button class="btn btn-primary approve-btn" data-id="${o.id}">✓ Approve</button>
+            <button class="btn btn-danger reject-btn" data-id="${o.id}">✕ Reject</button>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }).join('');
+
+  list.querySelectorAll('.approve-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>updateOrderStatus(btn.dataset.id, 'approved'));
+  });
+  list.querySelectorAll('.reject-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>updateOrderStatus(btn.dataset.id, 'rejected'));
+  });
+}
+
+async function updateOrderStatus(id, status){
+  try{
+    await updateDoc(doc(db,'orders',id), {status});
+    toast(status === 'approved' ? 'অর্ডার Approve হয়েছে' : 'অর্ডার Reject হয়েছে');
+  }catch(e){
+    console.error(e);
+    toast('সমস্যা হয়েছে');
+  }
+}
+</script>
+
+</body>
+</html>
