@@ -173,6 +173,26 @@
   .offer-banner .offer-text{font-size:13px;font-weight:600;}
   .countdown{display:flex;gap:6px;}
   .countdown .cbox{background:rgba(255,255,255,.2);border-radius:6px;padding:4px 8px;font-size:13px;font-weight:700;min-width:32px;text-align:center;}
+
+  /* Banner slideshow */
+  .banner-slide{position:absolute;inset:0;opacity:0;transition:opacity .5s;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#fff;padding:28px 20px;background-size:cover;background-position:center;}
+  .banner-slide.active{position:relative;opacity:1;}
+  .banner-dot{width:7px;height:7px;border-radius:50%;background:var(--border);cursor:pointer;}
+  .banner-dot.active{background:var(--primary);}
+  .buy-now-btn{width:100%;margin-top:8px;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;}
+
+  /* Image zoom overlay */
+  .zoom-overlay{position:fixed;inset:0;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;z-index:500;padding:20px;}
+  .zoom-overlay.show{display:flex;}
+  .zoom-overlay img{max-width:100%;max-height:85vh;object-fit:contain;border-radius:8px;}
+  .zoom-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.15);color:#fff;border:none;width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer;}
+  .qv-img{cursor:zoom-in;}
+
+  /* Floating product cards beside banner - subtle depth, no extra network requests */
+  .banner-wrap{position:relative;}
+  .tunnel-card{position:absolute;width:44px;height:32px;border-radius:6px;background-size:cover;background-position:center;opacity:.35;animation:floatCard 4s ease-in-out infinite;pointer-events:none;}
+  @keyframes floatCard{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+  @media(max-width:480px){.tunnel-card{display:none;}}
 </style>
 </head>
 <body>
@@ -200,9 +220,10 @@
 </header>
 
 <main>
-  <div class="hero" id="homeSection">
-    <h1>খাটেরবাঘ - বিশ্বস্ত অনলাইন শপিং</h1>
-    <p>সারা বাংলাদেশে হোম ডেলিভারি | ক্যাশ অন ডেলিভারি সুবিধা</p>
+  <div class="hero banner-wrap" id="homeSection" style="position:relative;overflow:hidden;padding:0;">
+    <div id="bannerTunnel"></div>
+    <div id="bannerSlides" style="position:relative;min-height:140px;"></div>
+    <div id="bannerDots" style="display:flex;justify-content:center;gap:6px;padding:8px 0;"></div>
   </div>
 
   <div class="offer-banner" id="offerBanner">
@@ -240,6 +261,11 @@
 <a href="https://wa.me/8801928183469" target="_blank" class="whatsapp-fab" aria-label="WhatsApp">💬</a>
 <a href="tel:01928183469" class="call-fab" aria-label="Call us">📞</a>
 
+<div class="zoom-overlay" id="zoomOverlay">
+  <button class="zoom-close" id="zoomClose">×</button>
+  <img id="zoomImg" src="" alt="">
+</div>
+
 <!-- Quick View Modal -->
 <div class="qv-overlay" id="qvOverlay">
   <div class="qv-box">
@@ -255,6 +281,7 @@
       </div>
       <div class="qv-desc" id="qvDesc"></div>
       <button class="checkout-btn" id="qvAddBtn">Add to Cart</button>
+      <button class="buy-now-btn" id="qvBuyNowBtn">Buy Now</button>
     </div>
   </div>
 </div>
@@ -452,6 +479,7 @@ async function loadProducts(){
       firstSnapshot = false;
     }
     renderProducts();
+    if(typeof renderTunnelCards === 'function') renderTunnelCards();
   }, (err)=>{
     grid.innerHTML = `<div class="empty-state">Products load korte problem hocche. Refresh koro.</div>`;
     console.error(err);
@@ -584,12 +612,33 @@ function openQuickView(id){
 document.getElementById('qvClose').addEventListener('click', ()=>{
   document.getElementById('qvOverlay').classList.remove('show');
 });
+document.getElementById('qvImg').addEventListener('click', ()=>{
+  document.getElementById('zoomImg').src = document.getElementById('qvImg').src;
+  document.getElementById('zoomOverlay').classList.add('show');
+});
+document.getElementById('zoomClose').addEventListener('click', ()=>{
+  document.getElementById('zoomOverlay').classList.remove('show');
+});
+document.getElementById('zoomOverlay').addEventListener('click', (e)=>{
+  if(e.target.id === 'zoomOverlay') document.getElementById('zoomOverlay').classList.remove('show');
+});
 document.getElementById('qvOverlay').addEventListener('click', (e)=>{
   if(e.target.id === 'qvOverlay') document.getElementById('qvOverlay').classList.remove('show');
 });
 document.getElementById('qvAddBtn').addEventListener('click', (e)=>{
   addToCart(e.target.dataset.id);
   document.getElementById('qvOverlay').classList.remove('show');
+});
+document.getElementById('qvBuyNowBtn').addEventListener('click', ()=>{
+  const id = document.getElementById('qvAddBtn').dataset.id;
+  const product = allProducts.find(p=>p.id===id);
+  if(!product) return;
+  buyNowItems = [{id: product.id, name: product.name, price: product.price, image: product.image, qty: 1}];
+  document.getElementById('qvOverlay').classList.remove('show');
+  checkoutDrawer.classList.add('open');
+  cartOverlay.classList.add('open');
+  renderCheckoutSummary();
+  startIncompleteOrderTracking();
 });
 
 // ---------- Recently viewed ----------
@@ -775,11 +824,13 @@ document.getElementById('closeCheckout').addEventListener('click', ()=>{
   cartOverlay.classList.remove('open');
 });
 
+let buyNowItems = null;
 function renderCheckoutSummary(){
-  const total = cart.reduce((s,c)=>s+c.price*c.qty,0);
+  const items = buyNowItems || cart;
+  const total = items.reduce((s,c)=>s+c.price*c.qty,0);
   document.getElementById('checkoutSummary').innerHTML = `
     <div style="margin:14px 0;padding:12px;background:var(--bg);border-radius:8px;">
-      ${cart.map(c=>`<div class="order-summary-row"><span>${c.name} × ${c.qty}</span><span>${tk(c.price*c.qty)}</span></div>`).join('')}
+      ${items.map(c=>`<div class="order-summary-row"><span>${c.name} × ${c.qty}</span><span>${tk(c.price*c.qty)}</span></div>`).join('')}
       <div class="order-summary-row total"><span>Total</span><span>${tk(total)}</span></div>
     </div>
   `;
@@ -827,7 +878,8 @@ document.getElementById('placeOrderBtn').addEventListener('click', async ()=>{
     toast('সব তথ্য পূরণ করুন');
     return;
   }
-  if(cart.length===0){
+  const orderItems = buyNowItems || cart;
+  if(orderItems.length===0){
     toast('Cart খালি আছে');
     return;
   }
@@ -842,7 +894,7 @@ document.getElementById('placeOrderBtn').addEventListener('click', async ()=>{
     const snap = await getDocs(q);
     const isReturning = !snap.empty;
 
-    const total = cart.reduce((s,c)=>s+c.price*c.qty,0);
+    const total = orderItems.reduce((s,c)=>s+c.price*c.qty,0);
 
     const orderRef = await addDoc(collection(db,'orders'), {
       customerName: name,
@@ -851,7 +903,7 @@ document.getElementById('placeOrderBtn').addEventListener('click', async ()=>{
       city: city,
       zone: zone,
       notes: notes,
-      items: cart,
+      items: orderItems,
       total: total,
       status: 'Processing', // admin manages full lifecycle from here
       isReturningCustomer: isReturning,
@@ -865,8 +917,12 @@ document.getElementById('placeOrderBtn').addEventListener('click', async ()=>{
       localStorage.removeItem('kb_incomplete_id');
     }
 
-    cart = [];
-    saveCart();
+    if(buyNowItems){
+      buyNowItems = null;
+    }else{
+      cart = [];
+      saveCart();
+    }
     checkoutDrawer.classList.remove('open');
     cartOverlay.classList.remove('open');
     if(typeof fbq !== 'undefined'){
@@ -937,6 +993,77 @@ document.querySelectorAll('.nav-item').forEach(item=>{
   });
 });
 let showOffersOnly = false;
+
+// ---------- Banner slideshow (from admin-managed banners collection) ----------
+let bannerIdx = 0;
+let bannerTimer = null;
+onSnapshot(query(collection(db,'banners'), orderBy('createdAt','desc')), (snap)=>{
+  const banners = [];
+  snap.forEach(d=>{
+    const b = d.data();
+    if(b.status === 'Active') banners.push(b);
+  });
+  renderBanners(banners);
+});
+function renderBanners(banners){
+  const slidesWrap = document.getElementById('bannerSlides');
+  const dotsWrap = document.getElementById('bannerDots');
+  if(bannerTimer) clearInterval(bannerTimer);
+
+  if(banners.length === 0){
+    slidesWrap.innerHTML = `<div class="banner-slide active" style="background:linear-gradient(135deg,var(--primary),var(--primary-dark));">
+      <div style="font-size:20px;font-weight:700;">খাটেরবাঘ - বিশ্বস্ত অনলাইন শপিং</div>
+      <div style="font-size:13px;opacity:.9;margin-top:4px;">সারা বাংলাদেশে হোম ডেলিভারি | ক্যাশ অন ডেলিভারি সুবিধা</div>
+    </div>`;
+    dotsWrap.innerHTML = '';
+    return;
+  }
+
+  slidesWrap.innerHTML = banners.map((b,i)=>{
+    let bg = '';
+    if(b.type==='image' && b.url){
+      bg = `background-image:url('${b.url}');`;
+    }else{
+      bg = `background:${b.bg || 'linear-gradient(135deg,var(--primary),var(--primary-dark))'};`;
+    }
+    return `<div class="banner-slide${i===0?' active':''}" data-i="${i}" style="${bg}">
+      ${b.text ? `<div style="font-size:20px;font-weight:700;">${b.text}</div>` : ''}
+      ${b.sub ? `<div style="font-size:13px;opacity:.9;margin-top:4px;">${b.sub}</div>` : ''}
+    </div>`;
+  }).join('');
+  dotsWrap.innerHTML = banners.map((_,i)=>`<div class="banner-dot${i===0?' active':''}" data-i="${i}"></div>`).join('');
+  dotsWrap.querySelectorAll('.banner-dot').forEach(dot=>{
+    dot.addEventListener('click', ()=>goBanner(Number(dot.dataset.i)));
+  });
+
+  bannerIdx = 0;
+  if(banners.length > 1){
+    bannerTimer = setInterval(()=>goBanner(bannerIdx+1), 4500);
+  }
+  renderTunnelCards();
+}
+function renderTunnelCards(){
+  const tunnel = document.getElementById('bannerTunnel');
+  const positions = [
+    {side:'left', top:'12%'}, {side:'left', top:'62%'},
+    {side:'right', top:'18%'}, {side:'right', top:'66%'}
+  ];
+  // Reuse product images already in memory — zero extra network requests, purely decorative depth.
+  const images = allProducts.filter(p=>p.image).slice(0,4).map(p=>p.image);
+  if(images.length === 0){ tunnel.innerHTML = ''; return; }
+  tunnel.innerHTML = positions.slice(0, images.length).map((pos,i)=>{
+    const sideStyle = pos.side==='left' ? `left:4%;` : `right:4%;`;
+    return `<div class="tunnel-card" style="top:${pos.top};${sideStyle}background-image:url('${images[i]}');animation-delay:${i*0.7}s;"></div>`;
+  }).join('');
+}
+function goBanner(i){
+  const slides = document.querySelectorAll('.banner-slide');
+  const dots = document.querySelectorAll('.banner-dot');
+  if(slides.length === 0) return;
+  bannerIdx = (i + slides.length) % slides.length;
+  slides.forEach((s,j)=>s.classList.toggle('active', j===bannerIdx));
+  dots.forEach((d,j)=>d.classList.toggle('active', j===bannerIdx));
+}
 
 // ---------- Countdown Timer (resets daily at midnight) ----------
 function updateCountdown(){
