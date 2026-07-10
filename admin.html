@@ -125,6 +125,21 @@ td{padding:9px 8px;border-top:1px solid var(--border);white-space:nowrap;}
     <div class="nav-lbl">Customers</div>
     <div class="ni" data-page="customers"><span class="ic">👥</span>Customers</div>
   </div>
+  <div class="nav-sec">
+    <div class="nav-lbl">Website</div>
+    <div class="ni" data-page="banners"><span class="ic">🖼️</span>Banners</div>
+  </div>
+  <div class="nav-sec">
+    <div class="nav-lbl">Reports</div>
+    <div class="ni" data-page="rep-orders"><span class="ic">📈</span>Order Report</div>
+    <div class="ni" data-page="rep-products"><span class="ic">📈</span>Product Report</div>
+    <div class="ni" data-page="rep-courier"><span class="ic">📈</span>Courier Report</div>
+  </div>
+  <div class="nav-sec">
+    <div class="nav-lbl">Admin</div>
+    <div class="ni" data-page="users"><span class="ic">🔑</span>Users</div>
+    <div class="ni" data-page="settings"><span class="ic">⚙️</span>Settings</div>
+  </div>
 </div>
 
 <div class="topbar">
@@ -133,6 +148,7 @@ td{padding:9px 8px;border-top:1px solid var(--border);white-space:nowrap;}
     <div class="tb-title" id="pageTitle">Dashboard</div>
   </div>
   <div class="tb-right">
+    <a href="index.html" target="_blank" class="btn btn-outline btn-sm">🌐 Site দেখুন</a>
     <div class="bell-wrap" id="bellBtn">🔔<span class="bell-badge" id="bellBadge" style="display:none;">0</span></div>
     <button class="logout-link" id="logoutBtn">লগআউট</button>
   </div>
@@ -188,6 +204,7 @@ td{padding:9px 8px;border-top:1px solid var(--border);white-space:nowrap;}
       <button class="btn btn-outline btn-sm" id="exportCsvBtn">⬇ CSV</button>
       <button class="btn btn-outline btn-sm" id="bulkStatusBtn">Bulk Status</button>
       <button class="btn btn-outline btn-sm" id="printSelectedBtn">🖨️ Print Selected</button>
+      <button class="btn btn-primary btn-sm" id="newOrderBtn">+ New Order</button>
     </div>
     <div class="tbl-wrap">
       <table>
@@ -213,6 +230,11 @@ td{padding:9px 8px;border-top:1px solid var(--border);white-space:nowrap;}
         <div class="form-group"><label>ক্যাটাগরি</label><select id="pCategory"></select></div>
       </div>
       <div class="form-row">
+        <div class="form-group"><label>Product Code</label><input type="text" id="pCode" placeholder="যেমন: KB-001"></div>
+        <div class="form-group"><label>Status</label><select id="pStatus"><option>Active</option><option>Inactive</option></select></div>
+        <div class="form-group"><label>Free Delivery</label><select id="pFreeDelivery"><option>No</option><option>Yes</option></select></div>
+      </div>
+      <div class="form-row">
         <div class="form-group"><label>নিয়মিত মূল্য (৳)</label><input type="number" id="pRegular"></div>
         <div class="form-group"><label>সেল মূল্য (৳)</label><input type="number" id="pSale"></div>
         <div class="form-group"><label>স্টক</label><input type="number" id="pStock" value="10"></div>
@@ -231,7 +253,7 @@ td{padding:9px 8px;border-top:1px solid var(--border);white-space:nowrap;}
     </div>
     <div class="tbl-wrap">
       <table>
-        <thead><tr><th>Image</th><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Ad Link</th><th>Action</th></tr></thead>
+        <thead><tr><th>Image</th><th>Name</th><th>Code</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th>Ad Link</th><th>Action</th></tr></thead>
         <tbody id="productTable"></tbody>
       </table>
     </div>
@@ -281,6 +303,196 @@ td{padding:9px 8px;border-top:1px solid var(--border);white-space:nowrap;}
     </div>
   </div>
 
+  <!-- BANNERS -->
+  <div class="page" id="pg-banners">
+    <div class="card">
+      <h3 id="bannerFormTitle">নতুন ব্যানার</h3>
+      <div class="form-row">
+        <div class="form-group"><label>Type</label>
+          <select id="bType">
+            <option value="gradient">Gradient (Text)</option>
+            <option value="image">Image</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Status</label>
+          <select id="bStatus"><option>Active</option><option>Inactive</option></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Title Text</label><input type="text" id="bText"></div>
+        <div class="form-group"><label>Subtitle</label><input type="text" id="bSub"></div>
+      </div>
+      <div id="bGradientWrap" class="form-group" style="margin-bottom:10px;">
+        <label>Background (CSS gradient/color)</label><input type="text" id="bBg" placeholder="linear-gradient(135deg,#0f6e56,#D85A30)">
+      </div>
+      <div id="bImageWrap" style="display:none;">
+        <div class="upload-zone" id="bannerUploadZone">
+          <div class="gallery-preview" id="bannerGalleryPreview"></div>
+          <div id="bannerUploadText">📷 ব্যানার ছবি আপলোড করুন (৪টি পর্যন্ত)</div>
+          <input type="file" id="bannerFileInput" accept="image/*" multiple style="display:none;">
+        </div>
+      </div>
+      <input type="hidden" id="editingBannerId">
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button class="btn btn-primary" id="saveBannerBtn">সংরক্ষণ করুন</button>
+        <button class="btn btn-outline" id="cancelBannerEdit" style="display:none;">বাতিল</button>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Preview</th><th>Title</th><th>Type</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody id="bannerTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- REPORTS: ORDERS -->
+  <div class="page" id="pg-rep-orders">
+    <div class="toolbar">
+      <input type="date" id="repOStart"><input type="date" id="repOEnd">
+      <select id="repOStatus">
+        <option value="">All Status</option>
+        <option>Processing</option><option>Payment Pending</option><option>On Hold</option>
+        <option>Invoiced</option><option>Delivered</option><option>Completed</option><option>Canceled</option>
+      </select>
+      <button class="btn btn-primary btn-sm" id="genRepOrders">Generate</button>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Date</th><th>Invoice</th><th>Customer</th><th>Product</th><th>Total</th><th>Courier</th><th>Status</th></tr></thead>
+        <tbody id="repOrdersTable"><tr><td colspan="7" class="empty-row">Date range দিয়ে Generate করুন</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- REPORTS: PRODUCTS -->
+  <div class="page" id="pg-rep-products">
+    <div class="toolbar">
+      <input type="date" id="repPStart"><input type="date" id="repPEnd">
+      <button class="btn btn-primary btn-sm" id="genRepProducts">Generate</button>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Date</th><th>Product</th><th>Qty Sold</th></tr></thead>
+        <tbody id="repProductsTable"><tr><td colspan="4" class="empty-row">Date range দিয়ে Generate করুন</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- REPORTS: COURIER -->
+  <div class="page" id="pg-rep-courier">
+    <div class="toolbar">
+      <input type="date" id="repCStart"><input type="date" id="repCEnd">
+      <select id="repCCourier"><option value="">All Couriers</option></select>
+      <button class="btn btn-primary btn-sm" id="genRepCourier">Generate</button>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Courier</th><th>Total Orders</th><th>Processing</th><th>Delivered</th><th>Completed</th><th>Canceled</th></tr></thead>
+        <tbody id="repCourierTable"><tr><td colspan="6" class="empty-row">Date range দিয়ে Generate করুন</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- USERS -->
+  <div class="page" id="pg-users">
+    <div class="card">
+      <h3>নতুন ইউজার</h3>
+      <div class="form-row">
+        <div class="form-group"><label>নাম</label><input type="text" id="uName"></div>
+        <div class="form-group"><label>ফোন</label><input type="text" id="uPhone"></div>
+        <div class="form-group"><label>ইমেইল</label><input type="email" id="uEmail"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Type</label><select id="uType"><option>Admin</option><option>Staff</option></select></div>
+        <div class="form-group"><label>Status</label><select id="uStatus"><option>Active</option><option>Inactive</option></select></div>
+      </div>
+      <input type="hidden" id="editingUserId">
+      <button class="btn btn-primary" id="saveUserBtn">সংরক্ষণ করুন</button>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Type</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody id="userTable"></tbody>
+      </table>
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin-top:10px;">নোট: এখানে ইউজার তালিকা রেফারেন্সের জন্য সংরক্ষিত হয়। প্রকৃত লগইন এক্সেস আলাদাভাবে Firebase Authentication থেকে দিতে হবে।</p>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="page" id="pg-settings">
+    <div class="card">
+      <h3>General</h3>
+      <div class="form-row">
+        <div class="form-group"><label>Site Name</label><input type="text" id="sSitename"></div>
+        <div class="form-group"><label>Phone</label><input type="text" id="sPhone"></div>
+      </div>
+      <div class="form-group" style="margin-bottom:10px;"><label>Address</label><input type="text" id="sAddress"></div>
+      <div class="form-group" style="margin-bottom:10px;"><label>Top bar text</label><input type="text" id="sTopbar"></div>
+      <div class="form-group" style="margin-bottom:10px;"><label>Thank you page message</label><input type="text" id="sThankyou"></div>
+      <div class="form-group" style="margin-bottom:10px;"><label>Footer text</label><input type="text" id="sFooter"></div>
+      <button class="btn btn-primary btn-sm" id="saveGeneralBtn">Save General</button>
+    </div>
+
+    <div class="card">
+      <h3>Delivery Charges</h3>
+      <div class="form-row">
+        <div class="form-group"><label>ঢাকার ভিতরে চার্জ (৳)</label><input type="number" id="sInsideCharge"></div>
+        <div class="form-group"><label>ঢাকার বাইরে চার্জ (৳)</label><input type="number" id="sOutsideCharge"></div>
+      </div>
+      <button class="btn btn-primary btn-sm" id="saveDeliveryBtn">Save Delivery</button>
+    </div>
+
+    <div class="card">
+      <h3>Invoice</h3>
+      <div class="form-row">
+        <div class="form-group"><label>Invoice Prefix</label><input type="text" id="sInvoicePrefix" placeholder="KB"></div>
+        <div class="form-group"><label>Per page count</label><input type="number" id="sInvoicePerPage" value="1"></div>
+      </div>
+      <button class="btn btn-primary btn-sm" id="saveInvoiceBtn">Save Invoice</button>
+    </div>
+
+    <div class="card">
+      <h3>Social Links</h3>
+      <div class="form-row">
+        <div class="form-group"><label>Facebook</label><input type="text" id="sFb"></div>
+        <div class="form-group"><label>TikTok</label><input type="text" id="sTiktok"></div>
+        <div class="form-group"><label>YouTube</label><input type="text" id="sYt"></div>
+        <div class="form-group"><label>Instagram</label><input type="text" id="sIg"></div>
+        <div class="form-group"><label>WhatsApp Number</label><input type="text" id="sWa"></div>
+      </div>
+      <button class="btn btn-primary btn-sm" id="saveSocialBtn">Save Social</button>
+    </div>
+
+    <div class="card">
+      <h3>Analytics / Pixel IDs</h3>
+      <div class="form-row">
+        <div class="form-group"><label>Meta Pixel ID</label><input type="text" id="sFbPixel"></div>
+        <div class="form-group"><label>TikTok Pixel ID</label><input type="text" id="sTkPixel"></div>
+        <div class="form-group"><label>Google Tag ID</label><input type="text" id="sGaId"></div>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:8px;">এখানে সেভ করা ID গুলো রেফারেন্সের জন্য। index.html-এ সরাসরি বসাতে হবে।</p>
+      <button class="btn btn-primary btn-sm" id="saveAnalyticsBtn">Save Analytics</button>
+    </div>
+
+    <div class="card">
+      <h3>Blacklist</h3>
+      <div class="form-row">
+        <div class="form-group"><label>Blacklisted Phones (comma separated)</label><input type="text" id="sPhoneBlacklist"></div>
+      </div>
+      <button class="btn btn-primary btn-sm" id="saveBlacklistBtn">Save Blacklist</button>
+    </div>
+
+    <div class="card">
+      <h3>Change Password</h3>
+      <div class="form-row">
+        <div class="form-group"><label>New Password</label><input type="password" id="sNewPassword" placeholder="নতুন পাসওয়ার্ড"></div>
+      </div>
+      <button class="btn btn-primary btn-sm" id="changePasswordBtn">Change Password</button>
+      <p style="font-size:12px;color:var(--muted);margin-top:8px;">নোট: পাসওয়ার্ড পরিবর্তনের পর পুনরায় লগইন করতে হতে পারে।</p>
+    </div>
+  </div>
+
 </div>
 </div>
 
@@ -317,16 +529,46 @@ td{padding:9px 8px;border-top:1px solid var(--border);white-space:nowrap;}
   </div>
 </div>
 
+<div class="modal-overlay" id="viewOrderModal">
+  <div class="modal-box">
+    <button class="modal-close" id="closeViewOrderModal">×</button>
+    <h3>Order Details</h3>
+    <div id="viewOrderContent"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="newOrderModal">
+  <div class="modal-box">
+    <button class="modal-close" id="closeNewOrderModal">×</button>
+    <h3>নতুন অর্ডার তৈরি করুন</h3>
+    <div class="form-row">
+      <div class="form-group"><label>Customer Name</label><input type="text" id="no-name"></div>
+      <div class="form-group"><label>Phone</label><input type="text" id="no-phone"></div>
+    </div>
+    <div class="form-group" style="margin-bottom:10px;"><label>Address</label><textarea id="no-address" rows="2"></textarea></div>
+    <div class="form-row">
+      <div class="form-group"><label>Product</label><select id="no-product"></select></div>
+      <div class="form-group"><label>Quantity</label><input type="number" id="no-qty" value="1" min="1"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Discount (৳)</label><input type="number" id="no-discount" value="0"></div>
+      <div class="form-group"><label>Courier</label><select id="no-courier"></select></div>
+    </div>
+    <p style="font-size:13px;margin-bottom:10px;">Total: <strong id="no-total">৳0</strong></p>
+    <button class="btn btn-primary" id="saveNewOrderBtn">অর্ডার তৈরি করুন</button>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
-  getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut
+  getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, updatePassword
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
   getFirestore, collection, addDoc, updateDoc, deleteDoc, doc,
-  onSnapshot, query, orderBy, serverTimestamp, writeBatch
+  onSnapshot, query, orderBy, serverTimestamp, writeBatch, setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -379,7 +621,7 @@ onAuthStateChanged(auth, (user)=>{
   document.getElementById('adminApp').style.display = user ? 'block' : 'none';
 });
 
-const pageTitles = {dashboard:'Dashboard', incomplete:'Incomplete Orders', orders:'All Orders', products:'Products', categories:'Categories', couriers:'Couriers', customers:'Customers'};
+const pageTitles = {dashboard:'Dashboard', incomplete:'Incomplete Orders', orders:'All Orders', products:'Products', categories:'Categories', couriers:'Couriers', customers:'Customers', banners:'Banners', 'rep-orders':'Order Report', 'rep-products':'Product Report', 'rep-courier':'Courier Report', users:'Users', settings:'Settings'};
 document.querySelectorAll('.ni').forEach(item=>{
   item.addEventListener('click', ()=>{
     document.querySelectorAll('.ni').forEach(i=>i.classList.remove('active'));
@@ -559,6 +801,9 @@ onSnapshot(query(collection(db,'products'), orderBy('createdAt','desc')), (snap)
 
 document.getElementById('saveProductBtn').addEventListener('click', async ()=>{
   const name = document.getElementById('pName').value.trim();
+  const code = document.getElementById('pCode').value.trim();
+  const status = document.getElementById('pStatus').value;
+  const freeDelivery = document.getElementById('pFreeDelivery').value;
   const regular = Number(document.getElementById('pRegular').value)||0;
   const sale = Number(document.getElementById('pSale').value)||0;
   const category = document.getElementById('pCategory').value;
@@ -568,7 +813,7 @@ document.getElementById('saveProductBtn').addEventListener('click', async ()=>{
   if(!name || !regular){ toast('নাম এবং মূল্য পূরণ করুন'); return; }
 
   const data = {
-    name, regular, sale: sale||null, category, stock, description,
+    name, code, status, freeDelivery, regular, sale: sale||null, category, stock, description,
     images: uploadedImages, image: uploadedImages[0] || null,
     price: sale || regular, oldPrice: sale ? regular : null,
   };
@@ -580,7 +825,9 @@ document.getElementById('saveProductBtn').addEventListener('click', async ()=>{
   }catch(e){ console.error(e); toast('সমস্যা হয়েছে'); }
 });
 function resetProductForm(){
-  document.getElementById('pName').value=''; document.getElementById('pRegular').value='';
+  document.getElementById('pName').value=''; document.getElementById('pCode').value='';
+  document.getElementById('pStatus').value='Active'; document.getElementById('pFreeDelivery').value='No';
+  document.getElementById('pRegular').value='';
   document.getElementById('pSale').value=''; document.getElementById('pCategory').value='';
   document.getElementById('pStock').value='10'; document.getElementById('pDesc').value='';
   document.getElementById('editingProductId').value='';
@@ -602,14 +849,16 @@ function renderProductTable(){
     if(catF && p.category!==catF) return false;
     return true;
   });
-  if(list.length===0){ tb.innerHTML = '<tr><td colspan="7" class="empty-row">কোনো পণ্য নেই</td></tr>'; return; }
+  if(list.length===0){ tb.innerHTML = '<tr><td colspan="9" class="empty-row">কোনো পণ্য নেই</td></tr>'; return; }
   tb.innerHTML = list.map(p=>`
     <tr>
       <td><img src="${p.image||''}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;"></td>
       <td>${p.name}</td>
+      <td>${p.code||'—'}</td>
       <td>${p.category||'—'}</td>
       <td>${tk(p.sale||p.regular)}${p.sale?` <s style="color:var(--muted);">${tk(p.regular)}</s>`:''}</td>
       <td style="${(p.stock||0)<=3?'color:var(--red);font-weight:600;':''}">${p.stock||0}</td>
+      <td>${p.status==='Inactive' ? '<span style="color:var(--red);">Inactive</span>' : '<span style="color:var(--green);">Active</span>'}</td>
       <td><button class="btn btn-outline btn-sm copy-link" data-id="${p.id}">🔗 Copy</button></td>
       <td>
         <button class="btn btn-outline btn-sm edit-prod" data-id="${p.id}">Edit</button>
@@ -625,6 +874,9 @@ function renderProductTable(){
     const p = allProducts.find(x=>x.id===b.dataset.id);
     document.getElementById('editingProductId').value = p.id;
     document.getElementById('pName').value = p.name||'';
+    document.getElementById('pCode').value = p.code||'';
+    document.getElementById('pStatus').value = p.status||'Active';
+    document.getElementById('pFreeDelivery').value = p.freeDelivery||'No';
     document.getElementById('pRegular').value = p.regular||'';
     document.getElementById('pSale').value = p.sale||'';
     document.getElementById('pCategory').value = p.category||'';
@@ -731,6 +983,7 @@ function renderOrderTable(){
           </select>
         </td>
         <td>
+          <button class="btn btn-outline btn-sm view-order" data-id="${o.id}">👁️</button>
           <button class="btn btn-outline btn-sm edit-order" data-id="${o.id}">Edit</button>
           <button class="btn btn-outline btn-sm print-order" data-id="${o.id}">🖨️</button>
           <button class="btn btn-danger btn-sm del-order" data-id="${o.id}">Del</button>
@@ -745,6 +998,7 @@ function renderOrderTable(){
   tb.querySelectorAll('.courier-select').forEach(sel=>{
     sel.addEventListener('change', ()=>updateOrder(sel.dataset.id, {courier: sel.value}, false));
   });
+  tb.querySelectorAll('.view-order').forEach(b=>b.addEventListener('click', ()=>openViewOrderModal(b.dataset.id)));
   tb.querySelectorAll('.edit-order').forEach(b=>b.addEventListener('click', ()=>openOrderEditModal(b.dataset.id)));
   tb.querySelectorAll('.print-order').forEach(b=>b.addEventListener('click', ()=>printOrders([allOrders.find(o=>o.id===b.dataset.id)])));
   tb.querySelectorAll('.del-order').forEach(b=>b.addEventListener('click', async ()=>{
@@ -852,6 +1106,31 @@ function openOrderEditModal(id){
 document.getElementById('closeOrderModal').addEventListener('click', ()=>{
   document.getElementById('orderModal').classList.remove('show');
 });
+
+function openViewOrderModal(id){
+  const o = allOrders.find(x=>x.id===id);
+  if(!o) return;
+  const shortId = o.id.slice(-6).toUpperCase();
+  const d = o.createdAt && o.createdAt.toDate ? o.createdAt.toDate() : new Date();
+  const items = (o.items||[]).map(i=>`<tr><td>${i.name}</td><td>${i.qty}</td><td>${tk(i.price*i.qty)}</td></tr>`).join('');
+  document.getElementById('viewOrderContent').innerHTML = `
+    <p><strong>Invoice:</strong> #${shortId} &nbsp; <strong>Date:</strong> ${d.toLocaleString()}</p>
+    <p><strong>Customer:</strong> ${o.customerName||'—'} ${o.isReturningCustomer?'<span class="returning-tag">পুরনো কাস্টমার</span>':''}</p>
+    <p><strong>Phone:</strong> ${o.phone||'—'}</p>
+    <p><strong>Address:</strong> ${o.address||'—'} ${o.city?`(${o.city}${o.zone?', '+o.zone:''})`:''}</p>
+    <p><strong>Courier:</strong> ${o.courier||'—'} &nbsp; <strong>Status:</strong> ${o.status||'Processing'}</p>
+    ${o.notes ? `<p><strong>Notes:</strong> ${o.notes}</p>` : ''}
+    <table style="width:100%;margin-top:10px;border-collapse:collapse;">
+      <tr><th style="text-align:left;border-bottom:1px solid var(--border);padding:6px;">Item</th><th style="text-align:left;border-bottom:1px solid var(--border);padding:6px;">Qty</th><th style="text-align:left;border-bottom:1px solid var(--border);padding:6px;">Subtotal</th></tr>
+      ${items}
+    </table>
+    <p style="font-weight:700;margin-top:8px;">Total: ${tk(o.total)}</p>
+  `;
+  document.getElementById('viewOrderModal').classList.add('show');
+}
+document.getElementById('closeViewOrderModal').addEventListener('click', ()=>{
+  document.getElementById('viewOrderModal').classList.remove('show');
+});
 document.getElementById('saveOrderEditBtn').addEventListener('click', async ()=>{
   const id = document.getElementById('eo-id').value;
   const data = {
@@ -867,6 +1146,57 @@ document.getElementById('saveOrderEditBtn').addEventListener('click', async ()=>
     await updateDoc(doc(db,'orders',id), data);
     document.getElementById('orderModal').classList.remove('show');
     toast('আপডেট হয়েছে');
+  }catch(e){ console.error(e); toast('সমস্যা হয়েছে'); }
+});
+
+document.getElementById('newOrderBtn').addEventListener('click', ()=>{
+  document.getElementById('no-name').value=''; document.getElementById('no-phone').value='';
+  document.getElementById('no-address').value=''; document.getElementById('no-qty').value=1;
+  document.getElementById('no-discount').value=0;
+  document.getElementById('no-product').innerHTML = '<option value="">নির্বাচন করুন</option>' +
+    allProducts.map(p=>`<option value="${p.id}">${p.name} — ${tk(p.sale||p.regular)}</option>`).join('');
+  document.getElementById('no-courier').innerHTML = '<option value="">নির্বাচন করুন</option>' +
+    couriers.map(c=>`<option value="${c.name}">${c.name}</option>`).join('');
+  recalcNewOrderTotal();
+  document.getElementById('newOrderModal').classList.add('show');
+});
+document.getElementById('closeNewOrderModal').addEventListener('click', ()=>{
+  document.getElementById('newOrderModal').classList.remove('show');
+});
+function recalcNewOrderTotal(){
+  const pid = document.getElementById('no-product').value;
+  const qty = Number(document.getElementById('no-qty').value)||1;
+  const discount = Number(document.getElementById('no-discount').value)||0;
+  const product = allProducts.find(p=>p.id===pid);
+  const price = product ? (product.sale||product.regular||0) : 0;
+  const total = Math.max(0, (price*qty)-discount);
+  document.getElementById('no-total').textContent = tk(total);
+}
+['no-product','no-qty','no-discount'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', recalcNewOrderTotal);
+  document.getElementById(id).addEventListener('change', recalcNewOrderTotal);
+});
+document.getElementById('saveNewOrderBtn').addEventListener('click', async ()=>{
+  const name = document.getElementById('no-name').value.trim();
+  const phone = document.getElementById('no-phone').value.trim();
+  const address = document.getElementById('no-address').value.trim();
+  const pid = document.getElementById('no-product').value;
+  const qty = Number(document.getElementById('no-qty').value)||1;
+  const discount = Number(document.getElementById('no-discount').value)||0;
+  const courier = document.getElementById('no-courier').value;
+  const product = allProducts.find(p=>p.id===pid);
+  if(!name || !phone || !product){ toast('সব তথ্য পূরণ করুন'); return; }
+  const price = product.sale || product.regular || 0;
+  const total = Math.max(0, (price*qty)-discount);
+  try{
+    await addDoc(collection(db,'orders'), {
+      customerName: name, phone, address, courier,
+      items: [{id: product.id, name: product.name, price, qty}],
+      total, status: 'Processing', isReturningCustomer: false,
+      createdAt: serverTimestamp(), _manualEntry: true
+    });
+    document.getElementById('newOrderModal').classList.remove('show');
+    toast('অর্ডার তৈরি হয়েছে');
   }catch(e){ console.error(e); toast('সমস্যা হয়েছে'); }
 });
 
@@ -936,6 +1266,282 @@ function renderIncompleteTable(){
   }));
 }
 document.getElementById('incSearch').addEventListener('input', renderIncompleteTable);
+
+// ================= BANNERS =================
+let bannerImages = [];
+document.getElementById('bType').addEventListener('change', (e)=>{
+  const isImage = e.target.value === 'image';
+  document.getElementById('bImageWrap').style.display = isImage ? 'block' : 'none';
+  document.getElementById('bGradientWrap').style.display = isImage ? 'none' : 'block';
+});
+document.getElementById('bannerUploadZone').addEventListener('click', ()=>document.getElementById('bannerFileInput').click());
+document.getElementById('bannerFileInput').addEventListener('change', async (e)=>{
+  const files = Array.from(e.target.files).slice(0, 4-bannerImages.length);
+  for(const file of files){
+    await new Promise((resolve)=>{
+      const fd = new FormData();
+      fd.append('file', file); fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`);
+      xhr.onload = ()=>{
+        if(xhr.status===200){
+          const data = JSON.parse(xhr.responseText);
+          bannerImages.push(data.secure_url.replace('/upload/','/upload/f_auto,q_auto/'));
+        }
+        resolve();
+      };
+      xhr.onerror = resolve;
+      xhr.send(fd);
+    });
+  }
+  renderBannerGalleryPreview();
+});
+function renderBannerGalleryPreview(){
+  document.getElementById('bannerGalleryPreview').innerHTML = bannerImages.map((url,idx)=>`
+    <div style="position:relative;"><img src="${url}">
+    <button class="rm-banner-img" data-idx="${idx}" style="position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;border:none;border-radius:50%;width:16px;height:16px;font-size:10px;">×</button></div>`).join('');
+  document.querySelectorAll('.rm-banner-img').forEach(b=>b.addEventListener('click', (e)=>{
+    e.stopPropagation(); bannerImages.splice(Number(b.dataset.idx),1); renderBannerGalleryPreview();
+  }));
+}
+
+let allBanners = [];
+onSnapshot(query(collection(db,'banners'), orderBy('createdAt','desc')), (snap)=>{
+  allBanners = [];
+  snap.forEach(d=>allBanners.push({id:d.id, ...d.data()}));
+  renderBannerTable();
+});
+document.getElementById('saveBannerBtn').addEventListener('click', async ()=>{
+  const type = document.getElementById('bType').value;
+  const data = {
+    type, text: document.getElementById('bText').value, sub: document.getElementById('bSub').value,
+    status: document.getElementById('bStatus').value,
+  };
+  if(type==='gradient') data.bg = document.getElementById('bBg').value;
+  if(type==='image'){ data.images = bannerImages; data.url = bannerImages[0]||''; }
+  const editId = document.getElementById('editingBannerId').value;
+  try{
+    if(editId) await updateDoc(doc(db,'banners',editId), data);
+    else{ data.createdAt = serverTimestamp(); await addDoc(collection(db,'banners'), data); }
+    resetBannerForm();
+    toast('ব্যানার সংরক্ষিত হয়েছে');
+  }catch(e){ console.error(e); toast('সমস্যা হয়েছে'); }
+});
+function resetBannerForm(){
+  document.getElementById('bText').value=''; document.getElementById('bSub').value='';
+  document.getElementById('bBg').value=''; document.getElementById('bStatus').value='Active';
+  document.getElementById('editingBannerId').value='';
+  bannerImages = []; renderBannerGalleryPreview();
+  document.getElementById('bannerFormTitle').textContent = 'নতুন ব্যানার';
+  document.getElementById('cancelBannerEdit').style.display = 'none';
+}
+document.getElementById('cancelBannerEdit').addEventListener('click', resetBannerForm);
+function renderBannerTable(){
+  const tb = document.getElementById('bannerTable');
+  if(allBanners.length===0){ tb.innerHTML = '<tr><td colspan="5" class="empty-row">কোনো ব্যানার নেই</td></tr>'; return; }
+  tb.innerHTML = allBanners.map(b=>`
+    <tr>
+      <td>${b.type==='image' && b.url ? `<img src="${b.url}" style="width:70px;height:38px;object-fit:cover;border-radius:6px;">` : `<div style="width:70px;height:38px;border-radius:6px;background:${b.bg||'#eee'};"></div>`}</td>
+      <td>${b.text||'—'}</td>
+      <td>${b.type}</td>
+      <td>${b.status}</td>
+      <td>
+        <button class="btn btn-outline btn-sm edit-banner" data-id="${b.id}">Edit</button>
+        <button class="btn btn-danger btn-sm del-banner" data-id="${b.id}">Delete</button>
+      </td>
+    </tr>
+  `).join('');
+  tb.querySelectorAll('.edit-banner').forEach(btn=>btn.addEventListener('click', ()=>{
+    const b = allBanners.find(x=>x.id===btn.dataset.id);
+    document.getElementById('editingBannerId').value = b.id;
+    document.getElementById('bType').value = b.type;
+    document.getElementById('bType').dispatchEvent(new Event('change'));
+    document.getElementById('bText').value = b.text||'';
+    document.getElementById('bSub').value = b.sub||'';
+    document.getElementById('bStatus').value = b.status||'Active';
+    if(b.bg) document.getElementById('bBg').value = b.bg;
+    bannerImages = b.images && b.images.length ? [...b.images] : (b.url?[b.url]:[]);
+    renderBannerGalleryPreview();
+    document.getElementById('bannerFormTitle').textContent = 'ব্যানার এডিট করুন';
+    document.getElementById('cancelBannerEdit').style.display = 'inline-block';
+    document.querySelector('.ni[data-page="banners"]').click();
+  }));
+  tb.querySelectorAll('.del-banner').forEach(btn=>btn.addEventListener('click', async ()=>{
+    if(!confirm('Delete this banner?')) return;
+    await deleteDoc(doc(db,'banners',btn.dataset.id));
+    toast('মুছে ফেলা হয়েছে');
+  }));
+}
+
+// ================= REPORTS (generated from in-memory allOrders, already synced live) =================
+document.getElementById('genRepOrders').addEventListener('click', ()=>{
+  const start = document.getElementById('repOStart').value;
+  const end = document.getElementById('repOEnd').value;
+  const status = document.getElementById('repOStatus').value;
+  if(!start || !end){ toast('Start ও End date দিন'); return; }
+  const filtered = allOrders.filter(o=>{
+    const d = o.createdAt && o.createdAt.toDate ? o.createdAt.toDate() : new Date();
+    const dStr = d.toISOString().split('T')[0];
+    if(dStr < start || dStr > end) return false;
+    if(status && o.status !== status) return false;
+    return true;
+  });
+  const tb = document.getElementById('repOrdersTable');
+  if(filtered.length===0){ tb.innerHTML = '<tr><td colspan="7" class="empty-row">কোনো ডেটা নেই</td></tr>'; return; }
+  tb.innerHTML = filtered.map(o=>{
+    const d = o.createdAt && o.createdAt.toDate ? o.createdAt.toDate() : new Date();
+    const productSummary = (o.items||[]).map(i=>`${i.name} x${i.qty}`).join(', ');
+    return `<tr><td>${d.toLocaleDateString()}</td><td>#${o.id.slice(-6).toUpperCase()}</td><td>${o.customerName||'—'}<br><small>${o.phone||''}</small></td><td>${productSummary}</td><td>${tk(o.total)}</td><td>${o.courier||'—'}</td><td>${o.status||'Processing'}</td></tr>`;
+  }).join('');
+});
+
+document.getElementById('genRepProducts').addEventListener('click', ()=>{
+  const start = document.getElementById('repPStart').value;
+  const end = document.getElementById('repPEnd').value;
+  if(!start || !end){ toast('Start ও End date দিন'); return; }
+  const rows = [];
+  allOrders.forEach(o=>{
+    const d = o.createdAt && o.createdAt.toDate ? o.createdAt.toDate() : new Date();
+    const dStr = d.toISOString().split('T')[0];
+    if(dStr < start || dStr > end) return;
+    (o.items||[]).forEach(i=>rows.push({date: d.toLocaleDateString(), name: i.name, qty: i.qty}));
+  });
+  const tb = document.getElementById('repProductsTable');
+  if(rows.length===0){ tb.innerHTML = '<tr><td colspan="4" class="empty-row">কোনো ডেটা নেই</td></tr>'; return; }
+  tb.innerHTML = rows.map((r,i)=>`<tr><td>${i+1}</td><td>${r.date}</td><td>${r.name}</td><td>${r.qty}</td></tr>`).join('');
+});
+
+document.getElementById('genRepCourier').addEventListener('click', ()=>{
+  const start = document.getElementById('repCStart').value;
+  const end = document.getElementById('repCEnd').value;
+  const courierF = document.getElementById('repCCourier').value;
+  if(!start || !end){ toast('Start ও End date দিন'); return; }
+  const filtered = allOrders.filter(o=>{
+    const d = o.createdAt && o.createdAt.toDate ? o.createdAt.toDate() : new Date();
+    const dStr = d.toISOString().split('T')[0];
+    return dStr >= start && dStr <= end;
+  });
+  const list = couriers.filter(c=>!courierF || c.name===courierF);
+  const tb = document.getElementById('repCourierTable');
+  if(list.length===0){ tb.innerHTML = '<tr><td colspan="6" class="empty-row">কোনো courier নেই</td></tr>'; return; }
+  tb.innerHTML = list.map(c=>{
+    const os = filtered.filter(o=>o.courier===c.name);
+    return `<tr><td>${c.name}</td><td>${os.length}</td><td>${os.filter(o=>o.status==='Processing').length}</td><td>${os.filter(o=>o.status==='Delivered').length}</td><td>${os.filter(o=>o.status==='Completed').length}</td><td>${os.filter(o=>o.status==='Canceled').length}</td></tr>`;
+  }).join('');
+});
+
+// ================= USERS =================
+let allUsers = [];
+onSnapshot(query(collection(db,'panel_users'), orderBy('name')), (snap)=>{
+  allUsers = [];
+  snap.forEach(d=>allUsers.push({id:d.id, ...d.data()}));
+  renderUserTable();
+});
+document.getElementById('saveUserBtn').addEventListener('click', async ()=>{
+  const name = document.getElementById('uName').value.trim();
+  if(!name){ toast('নাম দিন'); return; }
+  const data = {
+    name, phone: document.getElementById('uPhone').value, email: document.getElementById('uEmail').value,
+    type: document.getElementById('uType').value, status: document.getElementById('uStatus').value,
+  };
+  const editId = document.getElementById('editingUserId').value;
+  try{
+    if(editId) await updateDoc(doc(db,'panel_users',editId), data);
+    else await addDoc(collection(db,'panel_users'), data);
+    ['uName','uPhone','uEmail'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('editingUserId').value='';
+    toast('সংরক্ষিত হয়েছে');
+  }catch(e){ console.error(e); toast('সমস্যা হয়েছে'); }
+});
+function renderUserTable(){
+  const tb = document.getElementById('userTable');
+  if(allUsers.length===0){ tb.innerHTML = '<tr><td colspan="6" class="empty-row">কোনো ইউজার নেই</td></tr>'; return; }
+  tb.innerHTML = allUsers.map(u=>`
+    <tr><td>${u.name}</td><td>${u.phone||'—'}</td><td>${u.email||'—'}</td><td>${u.type}</td><td>${u.status}</td>
+    <td><button class="btn btn-outline btn-sm edit-user" data-id="${u.id}">Edit</button>
+    <button class="btn btn-danger btn-sm del-user" data-id="${u.id}">Delete</button></td></tr>
+  `).join('');
+  tb.querySelectorAll('.edit-user').forEach(b=>b.addEventListener('click', ()=>{
+    const u = allUsers.find(x=>x.id===b.dataset.id);
+    document.getElementById('editingUserId').value = u.id;
+    document.getElementById('uName').value = u.name;
+    document.getElementById('uPhone').value = u.phone||'';
+    document.getElementById('uEmail').value = u.email||'';
+    document.getElementById('uType').value = u.type;
+    document.getElementById('uStatus').value = u.status;
+    document.querySelector('.ni[data-page="users"]').click();
+  }));
+  tb.querySelectorAll('.del-user').forEach(b=>b.addEventListener('click', async ()=>{
+    if(!confirm('Delete this user?')) return;
+    await deleteDoc(doc(db,'panel_users',b.dataset.id));
+    toast('মুছে ফেলা হয়েছে');
+  }));
+}
+
+// ================= SETTINGS =================
+let siteSettings = {};
+onSnapshot(doc(db,'settings','general'), (snap)=>{
+  siteSettings = snap.exists() ? snap.data() : {};
+  loadSettingsIntoForm();
+});
+function loadSettingsIntoForm(){
+  const g = (id,key)=>{ const el = document.getElementById(id); if(el && siteSettings[key]!==undefined) el.value = siteSettings[key]; };
+  g('sSitename','sitename'); g('sPhone','phone'); g('sAddress','address'); g('sTopbar','topbar');
+  g('sThankyou','thankyou'); g('sFooter','footer');
+  g('sInsideCharge','dhaka_inside'); g('sOutsideCharge','dhaka_outside');
+  g('sInvoicePrefix','invoice_prefix'); g('sInvoicePerPage','invoice_perpage');
+  g('sFb','fb'); g('sTiktok','tiktok'); g('sYt','yt'); g('sIg','ig'); g('sWa','wa');
+  g('sFbPixel','fbpixel'); g('sTkPixel','tkpixel'); g('sGaId','ga');
+  g('sPhoneBlacklist','phone_blacklist');
+}
+async function saveSettingsFields(fields){
+  const data = {};
+  fields.forEach(([key,id])=>{ const el = document.getElementById(id); data[key] = el.value; });
+  try{
+    await setDoc(doc(db,'settings','general'), data, {merge:true});
+    toast('Settings সংরক্ষিত হয়েছে');
+  }catch(e){ console.error(e); toast('সমস্যা হয়েছে'); }
+}
+document.getElementById('saveGeneralBtn').addEventListener('click', ()=>saveSettingsFields([
+  ['sitename','sSitename'],['phone','sPhone'],['address','sAddress'],['topbar','sTopbar'],['thankyou','sThankyou'],['footer','sFooter']
+]));
+document.getElementById('saveDeliveryBtn').addEventListener('click', ()=>saveSettingsFields([
+  ['dhaka_inside','sInsideCharge'],['dhaka_outside','sOutsideCharge']
+]));
+document.getElementById('saveInvoiceBtn').addEventListener('click', ()=>saveSettingsFields([
+  ['invoice_prefix','sInvoicePrefix'],['invoice_perpage','sInvoicePerPage']
+]));
+document.getElementById('saveSocialBtn').addEventListener('click', ()=>saveSettingsFields([
+  ['fb','sFb'],['tiktok','sTiktok'],['yt','sYt'],['ig','sIg'],['wa','sWa']
+]));
+document.getElementById('saveAnalyticsBtn').addEventListener('click', ()=>saveSettingsFields([
+  ['fbpixel','sFbPixel'],['tkpixel','sTkPixel'],['ga','sGaId']
+]));
+document.getElementById('saveBlacklistBtn').addEventListener('click', ()=>saveSettingsFields([
+  ['phone_blacklist','sPhoneBlacklist']
+]));
+
+document.getElementById('changePasswordBtn').addEventListener('click', async ()=>{
+  const newPass = document.getElementById('sNewPassword').value;
+  if(!newPass || newPass.length < 6){ toast('কমপক্ষে ৬ ক্যারেক্টার পাসওয়ার্ড দিন'); return; }
+  try{
+    await updatePassword(auth.currentUser, newPass);
+    document.getElementById('sNewPassword').value = '';
+    toast('পাসওয়ার্ড পরিবর্তন হয়েছে');
+  }catch(e){
+    console.error(e);
+    toast('পাসওয়ার্ড পরিবর্তনে সমস্যা - আবার লগইন করে চেষ্টা করুন');
+  }
+});
+
+// populate courier report dropdown once couriers load (re-run populateCourierDropdowns extension)
+const _origPopulateCourierDropdowns = populateCourierDropdowns;
+populateCourierDropdowns = function(){
+  _origPopulateCourierDropdowns();
+  const opts = couriers.map(c=>`<option value="${c.name}">${c.name}</option>`).join('');
+  const repCC = document.getElementById('repCCourier');
+  if(repCC) repCC.innerHTML = '<option value="">All Couriers</option>' + opts;
+};
 </script>
 
 </body>
