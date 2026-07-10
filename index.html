@@ -123,9 +123,11 @@
   .hero p{font-size:13px;opacity:.9;}
 
   /* Trust badges */
-  .trust-strip{display:flex;gap:8px;overflow-x:auto;padding:0 0 16px;scrollbar-width:none;}
-  .trust-strip::-webkit-scrollbar{display:none;}
-  .trust-item{flex-shrink:0;display:flex;align-items:center;gap:6px;background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:12px;white-space:nowrap;}
+  .marquee-bar{overflow:hidden;background:var(--card-bg);border-bottom:1px solid var(--border);padding:8px 0;}
+  .marquee-inner{display:flex;gap:40px;width:max-content;animation:marquee 20s linear infinite;}
+  .marquee-inner span{font-size:12px;color:var(--text-light);white-space:nowrap;}
+  .marquee-inner span strong{color:var(--primary);margin-right:4px;}
+  @keyframes marquee{from{transform:translateX(0);}to{transform:translateX(-50%);}}
 
   /* Rating stars */
   .stars{color:#EF9F27;font-size:11px;}
@@ -193,9 +195,32 @@
   .tunnel-card{position:absolute;width:44px;height:32px;border-radius:6px;background-size:cover;background-position:center;opacity:.35;animation:floatCard 4s ease-in-out infinite;pointer-events:none;}
   @keyframes floatCard{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
   @media(max-width:480px){.tunnel-card{display:none;}}
+
+  /* Top announcement bar */
+  .topbar-notice{background:linear-gradient(90deg,var(--accent),var(--primary));color:#fff;padding:6px;text-align:center;font-size:12px;font-weight:600;}
+
+  /* Reviews section */
+  .reviews-section{padding:20px 16px;background:var(--card-bg);margin-top:16px;}
+  .reviews-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:12px;}
+  .review-card{background:var(--bg);border-radius:10px;padding:14px;border:1px solid var(--border);}
+  .review-stars{color:#EF9F27;font-size:13px;margin-bottom:6px;}
+  .review-text{font-size:13px;color:var(--text);line-height:1.6;margin-bottom:10px;}
+  .reviewer{display:flex;align-items:center;gap:8px;}
+  .rev-av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;flex-shrink:0;}
+  .rev-name{font-size:12px;font-weight:600;}
+  .rev-loc{font-size:11px;color:var(--text-light);}
+
+  /* Contact section */
+  .contact-card{background:var(--bg);border-radius:10px;padding:16px;margin-bottom:12px;}
+  .contact-title{font-weight:600;font-size:14px;margin-bottom:10px;}
+  .contact-item{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:13px;}
+  .contact-item a{color:var(--primary);font-weight:600;}
+  .delivery-charge-note{font-size:12px;color:var(--text-light);margin-top:4px;}
 </style>
 </head>
 <body>
+
+<div class="topbar-notice">🚚 ফ্রি ডেলিভারি সারা বাংলাদেশ — 📞 01928183469</div>
 
 <header>
   <div class="header-top">
@@ -235,19 +260,54 @@
     </div>
   </div>
 
-  <div class="trust-strip">
-    <div class="trust-item">🚚 ফ্রি ডেলিভারি ৳২০০০+</div>
-    <div class="trust-item">💵 ক্যাশ অন ডেলিভারি</div>
-    <div class="trust-item">↩️ ৭ দিনের রিটার্ন</div>
-    <div class="trust-item">☎️ ২৪/৭ সাপোর্ট</div>
+  <div class="marquee-bar">
+    <div class="marquee-inner">
+      <span><strong>✦</strong> ফ্রি ডেলিভারি সারা বাংলাদেশ</span>
+      <span><strong>✦</strong> ক্যাশ অন ডেলিভারি সুবিধা</span>
+      <span><strong>✦</strong> ৭ দিন Return Policy</span>
+      <span><strong>✦</strong> Original পণ্যের নিশ্চয়তা</span>
+      <span><strong>✦</strong> হটলাইন: 01928183469</span>
+      <span><strong>✦</strong> ফ্রি ডেলিভারি সারা বাংলাদেশ</span>
+      <span><strong>✦</strong> ক্যাশ অন ডেলিভারি সুবিধা</span>
+      <span><strong>✦</strong> ৭ দিন Return Policy</span>
+      <span><strong>✦</strong> Original পণ্যের নিশ্চয়তা</span>
+      <span><strong>✦</strong> হটলাইন: 01928183469</span>
+    </div>
   </div>
   <div class="grid" id="productGrid"></div>
   <div id="recentlyViewedSection"></div>
 
+  <div class="reviews-section">
+    <div class="section-title" style="margin-top:0;">⭐ গ্রাহকরা কী বলছেন</div>
+    <div class="reviews-grid">
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <div class="review-text">খুব ভালো সার্ভিস, সময়মতো ডেলিভারি পেয়েছি। পণ্যের কোয়ালিটিও অসাধারণ। আবার অর্ডার করব।</div>
+        <div class="reviewer"><div class="rev-av" style="background:#0f6e56;">R</div><div><div class="rev-name">Rahim Ahmed</div><div class="rev-loc">📍 ঢাকা</div></div></div>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <div class="review-text">প্রথমবার অর্ডার করে সন্তুষ্ট হয়েছি। কাস্টমার সার্ভিস অনেক হেল্পফুল। দামও reasonable।</div>
+        <div class="reviewer"><div class="rev-av" style="background:#D85A30;">F</div><div><div class="rev-name">Farhana Akter</div><div class="rev-loc">📍 চট্টগ্রাম</div></div></div>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <div class="review-text">ক্যাশ অন ডেলিভারিতে অর্ডার করেছিলাম, কোনো সমস্যা হয়নি। প্যাকেজিং ভালো ছিল।</div>
+        <div class="reviewer"><div class="rev-av" style="background:#0095B6;">T</div><div><div class="rev-name">Tanvir Hasan</div><div class="rev-loc">📍 সিলেট</div></div></div>
+      </div>
+    </div>
+  </div>
+
   <div class="section-title" id="contactSection">যোগাযোগ করুন</div>
-  <div class="form-card" style="background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px;">
-    <p style="font-size:14px;margin-bottom:10px;">📞 কল করুন: <a href="tel:01928183469" style="color:var(--primary);font-weight:600;">01928183469</a></p>
-    <p style="font-size:14px;">💬 হোয়াটসঅ্যাপে মেসেজ দিন: <a href="https://wa.me/8801928183469" target="_blank" style="color:var(--primary);font-weight:600;">চ্যাট করুন</a></p>
+  <div class="contact-card">
+    <div class="contact-title">যোগাযোগের তথ্য</div>
+    <div class="contact-item">📞 হটলাইন: <a href="tel:01928183469">01928183469</a></div>
+    <div class="contact-item">💬 হোয়াটসঅ্যাপ: <a href="https://wa.me/8801928183469" target="_blank">চ্যাট করুন</a></div>
+    <div class="contact-item">🕐 সময়: সকাল ৯টা — রাত ১১টা (প্রতিদিন)</div>
+  </div>
+  <div class="contact-card">
+    <div class="contact-title">আমাদের সম্পর্কে</div>
+    <p style="font-size:13px;color:var(--text-light);line-height:1.7;">খাটেরবাঘ বাংলাদেশের একটি বিশ্বস্ত অনলাইন শপ। আমরা সর্বোচ্চ মানের পণ্য সেরা দামে সরবরাহ করি। ক্যাশ অন ডেলিভারি এবং সারা বাংলাদেশে হোম ডেলিভারি সুবিধা রয়েছে।</p>
   </div>
 </main>
 
@@ -436,7 +496,21 @@ document.getElementById('custCity').innerHTML = '<option value="">Select City</o
 document.getElementById('custCity').addEventListener('change', (e)=>{
   const zones = BD_CITY_ZONES[e.target.value] || [];
   document.getElementById('custZone').innerHTML = '<option value="">Select Zone</option>' + zones.map(z=>`<option>${z}</option>`).join('');
+  renderCheckoutSummary();
 });
+
+// ---------- Delivery charge (from admin Settings: Dhaka inside/outside) ----------
+let siteSettings = {};
+onSnapshot(doc(db,'settings','general'), (snap)=>{
+  siteSettings = snap.exists() ? snap.data() : {};
+  renderCheckoutSummary();
+});
+function getDeliveryCharge(){
+  const city = document.getElementById('custCity').value;
+  if(!city) return 0;
+  if(city === 'Dhaka') return Number(siteSettings.dhaka_inside) || 0;
+  return Number(siteSettings.dhaka_outside) || 0;
+}
 
 // ---------- State ----------
 let allProducts = [];
@@ -827,10 +901,13 @@ document.getElementById('closeCheckout').addEventListener('click', ()=>{
 let buyNowItems = null;
 function renderCheckoutSummary(){
   const items = buyNowItems || cart;
-  const total = items.reduce((s,c)=>s+c.price*c.qty,0);
+  const subtotal = items.reduce((s,c)=>s+c.price*c.qty,0);
+  const deliveryCharge = getDeliveryCharge();
+  const total = subtotal + deliveryCharge;
   document.getElementById('checkoutSummary').innerHTML = `
     <div style="margin:14px 0;padding:12px;background:var(--bg);border-radius:8px;">
       ${items.map(c=>`<div class="order-summary-row"><span>${c.name} × ${c.qty}</span><span>${tk(c.price*c.qty)}</span></div>`).join('')}
+      <div class="order-summary-row"><span>ডেলিভারি চার্জ</span><span>${tk(deliveryCharge)}</span></div>
       <div class="order-summary-row total"><span>Total</span><span>${tk(total)}</span></div>
     </div>
   `;
@@ -894,7 +971,9 @@ document.getElementById('placeOrderBtn').addEventListener('click', async ()=>{
     const snap = await getDocs(q);
     const isReturning = !snap.empty;
 
-    const total = orderItems.reduce((s,c)=>s+c.price*c.qty,0);
+    const subtotal = orderItems.reduce((s,c)=>s+c.price*c.qty,0);
+    const deliveryCharge = getDeliveryCharge();
+    const total = subtotal + deliveryCharge;
 
     const orderRef = await addDoc(collection(db,'orders'), {
       customerName: name,
@@ -904,6 +983,8 @@ document.getElementById('placeOrderBtn').addEventListener('click', async ()=>{
       zone: zone,
       notes: notes,
       items: orderItems,
+      subtotal: subtotal,
+      deliveryCharge: deliveryCharge,
       total: total,
       status: 'Processing', // admin manages full lifecycle from here
       isReturningCustomer: isReturning,
