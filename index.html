@@ -158,8 +158,21 @@
   /* WhatsApp FAB */
   .whatsapp-fab{position:fixed;bottom:76px;right:16px;background:#25D366;color:#fff;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 2px 8px rgba(0,0,0,.2);z-index:150;}
 
-  /* Recently viewed */
+  /* Section title */
   .section-title{font-size:16px;font-weight:600;margin:24px 0 12px;}
+
+  /* Bottom navigation */
+  .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--card-bg);border-top:1px solid var(--border);display:flex;z-index:180;padding:6px 0 max(6px,env(safe-area-inset-bottom));}
+  .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;color:var(--text-light);font-size:11px;cursor:pointer;background:none;border:none;}
+  .nav-item.active{color:var(--primary);}
+  .nav-item .nav-icon{font-size:20px;}
+  body{padding-bottom:64px;}
+
+  /* Countdown timer / offer banner */
+  .offer-banner{background:var(--accent);color:#fff;padding:14px 16px;margin-bottom:16px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
+  .offer-banner .offer-text{font-size:13px;font-weight:600;}
+  .countdown{display:flex;gap:6px;}
+  .countdown .cbox{background:rgba(255,255,255,.2);border-radius:6px;padding:4px 8px;font-size:13px;font-weight:700;min-width:32px;text-align:center;}
 </style>
 </head>
 <body>
@@ -187,10 +200,20 @@
 </header>
 
 <main>
-  <div class="hero">
+  <div class="hero" id="homeSection">
     <h1>খাটেরবাঘ - বিশ্বস্ত অনলাইন শপিং</h1>
     <p>সারা বাংলাদেশে হোম ডেলিভারি | ক্যাশ অন ডেলিভারি সুবিধা</p>
   </div>
+
+  <div class="offer-banner" id="offerBanner">
+    <div class="offer-text">🔥 আজকের অফার শেষ হবে</div>
+    <div class="countdown" id="countdownTimer">
+      <div class="cbox" id="cdHours">00</div>
+      <div class="cbox" id="cdMinutes">00</div>
+      <div class="cbox" id="cdSeconds">00</div>
+    </div>
+  </div>
+
   <div class="trust-strip">
     <div class="trust-item">🚚 ফ্রি ডেলিভারি ৳২০০০+</div>
     <div class="trust-item">💵 ক্যাশ অন ডেলিভারি</div>
@@ -199,7 +222,20 @@
   </div>
   <div class="grid" id="productGrid"></div>
   <div id="recentlyViewedSection"></div>
+
+  <div class="section-title" id="contactSection">যোগাযোগ করুন</div>
+  <div class="form-card" style="background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px;">
+    <p style="font-size:14px;margin-bottom:10px;">📞 কল করুন: <a href="tel:01928183469" style="color:var(--primary);font-weight:600;">01928183469</a></p>
+    <p style="font-size:14px;">💬 হোয়াটসঅ্যাপে মেসেজ দিন: <a href="https://wa.me/8801928183469" target="_blank" style="color:var(--primary);font-weight:600;">চ্যাট করুন</a></p>
+  </div>
 </main>
+
+<div class="bottom-nav">
+  <button class="nav-item active" data-nav="home"><span class="nav-icon">🏠</span>Home</button>
+  <button class="nav-item" data-nav="shop"><span class="nav-icon">🛍️</span>Shop</button>
+  <button class="nav-item" data-nav="offer"><span class="nav-icon">🔥</span>Offer</button>
+  <button class="nav-item" data-nav="contact"><span class="nav-icon">☎️</span>Contact</button>
+</div>
 
 <a href="https://wa.me/8801928183469" target="_blank" class="whatsapp-fab" aria-label="WhatsApp">💬</a>
 <a href="tel:01928183469" class="call-fab" aria-label="Call us">📞</a>
@@ -209,6 +245,7 @@
   <div class="qv-box">
     <button class="qv-close" id="qvClose">×</button>
     <img class="qv-img" id="qvImg" src="" alt="">
+    <div id="qvThumbs" style="display:flex;gap:6px;padding:10px 20px 0;overflow-x:auto;"></div>
     <div class="qv-body">
       <div class="qv-title" id="qvTitle"></div>
       <div class="stars">★★★★★<span class="rating-count">(৪.৮ • ১২০+ রিভিউ)</span></div>
@@ -297,11 +334,31 @@ fbq('track', 'PageView');
 </script>
 <!-- End Meta Pixel Code -->
 
+<!-- TikTok Pixel Code -->
+<script>
+!function (w, d, t) {
+  w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<e.length;n++)ttq.setAndDefer(e,e[n]);return e},ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var a=document.createElement("script");a.type="text/javascript",a.async=!0,a.src=i+"?sdkid="+e+"&lib="+t;var s=document.getElementsByTagName("script")[0];s.parentNode.insertBefore(a,s)};
+  ttq.load('YOUR_TIKTOK_PIXEL_ID');
+  ttq.page();
+}(window, document, 'ttq');
+</script>
+<!-- End TikTok Pixel Code -->
+
+<!-- Google tag (Google Ads / Analytics) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=YOUR_GOOGLE_TAG_ID"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'YOUR_GOOGLE_TAG_ID');
+</script>
+<!-- End Google tag -->
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
   getFirestore, collection, addDoc, getDocs, query, where, orderBy,
-  serverTimestamp, limit
+  serverTimestamp, limit, enableIndexedDbPersistence, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -315,6 +372,11 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+// Offline persistence: caches data locally so repeat visits load instantly
+enableIndexedDbPersistence(db).catch((err)=>{
+  console.warn('Offline persistence not enabled:', err.code);
+});
 
 // ---------- Utility ----------
 function tk(n){ return "৳" + Number(n||0).toLocaleString('en-BD'); }
@@ -349,10 +411,11 @@ async function loadProducts(){
       <div class="skeleton sline" style="width:50%"></div>
     </div>`).join('');
 
-  try{
-    const q = query(collection(db,'products'), orderBy('createdAt','desc'), limit(200));
-    const snap = await getDocs(q);
+  const q = query(collection(db,'products'), orderBy('createdAt','desc'), limit(200));
+  let firstSnapshot = true;
+  onSnapshot(q, (snap)=>{
     allProducts = [];
+    categories = new Set();
     snap.forEach(d=>{
       const p = d.data();
       p.id = d.id;
@@ -360,12 +423,15 @@ async function loadProducts(){
       if(p.category) categories.add(p.category);
     });
     renderCategoryBar();
-    applyDeepLink();
+    if(firstSnapshot){
+      applyDeepLink();
+      firstSnapshot = false;
+    }
     renderProducts();
-  }catch(e){
+  }, (err)=>{
     grid.innerHTML = `<div class="empty-state">Products load korte problem hocche. Refresh koro.</div>`;
-    console.error(e);
-  }
+    console.error(err);
+  });
 }
 
 function renderCategoryBar(){
@@ -396,6 +462,9 @@ function applyDeepLink(){
       if(typeof fbq !== 'undefined'){
         fbq('track','ViewContent',{content_ids:[p.id], content_name:p.name, value:p.price, currency:'BDT'});
       }
+      if(typeof gtag !== 'undefined'){
+        gtag('event','view_item',{currency:'BDT', value:p.price, items:[{item_id:p.id, item_name:p.name}]});
+      }
       setTimeout(()=>{
         const card = document.querySelector(`.card[data-id="${productId}"]`);
         if(card){
@@ -413,6 +482,7 @@ function renderProducts(){
     if(activeCategory!=='all' && p.category!==activeCategory) return false;
     if(searchTerm && !(p.name||'').toLowerCase().includes(searchTerm.toLowerCase())) return false;
     if(Number(p.price||0) > maxPrice) return false;
+    if(showOffersOnly && !(p.oldPrice && p.oldPrice > p.price)) return false;
     return true;
   });
 
@@ -455,7 +525,21 @@ function renderProducts(){
 function openQuickView(id){
   const p = allProducts.find(x=>x.id===id);
   if(!p) return;
-  document.getElementById('qvImg').src = p.image || '';
+  const images = (p.images && p.images.length) ? p.images : (p.image ? [p.image] : []);
+  document.getElementById('qvImg').src = images[0] || '';
+  const thumbsWrap = document.getElementById('qvThumbs');
+  if(images.length > 1){
+    thumbsWrap.innerHTML = images.map((img,idx)=>`<img src="${img}" data-idx="${idx}" style="width:48px;height:48px;object-fit:cover;border-radius:6px;cursor:pointer;flex-shrink:0;border:2px solid ${idx===0?'var(--primary)':'transparent'};">`).join('');
+    thumbsWrap.querySelectorAll('img').forEach(thumb=>{
+      thumb.addEventListener('click', ()=>{
+        document.getElementById('qvImg').src = images[Number(thumb.dataset.idx)];
+        thumbsWrap.querySelectorAll('img').forEach(t=>t.style.border='2px solid transparent');
+        thumb.style.border = '2px solid var(--primary)';
+      });
+    });
+  }else{
+    thumbsWrap.innerHTML = '';
+  }
   document.getElementById('qvTitle').textContent = p.name || '';
   document.getElementById('qvPrice').textContent = tk(p.price);
   document.getElementById('qvOldPrice').textContent = p.oldPrice ? tk(p.oldPrice) : '';
@@ -465,6 +549,12 @@ function openQuickView(id){
   saveRecentlyViewed(p);
   if(typeof fbq !== 'undefined'){
     fbq('track','ViewContent',{content_ids:[p.id], content_name:p.name, value:p.price, currency:'BDT'});
+  }
+  if(typeof ttq !== 'undefined'){
+    ttq.track('ViewContent',{content_id:p.id, content_name:p.name, value:p.price, currency:'BDT'});
+  }
+  if(typeof gtag !== 'undefined'){
+    gtag('event','view_item',{currency:'BDT', value:p.price, items:[{item_id:p.id, item_name:p.name}]});
   }
 }
 document.getElementById('qvClose').addEventListener('click', ()=>{
@@ -535,6 +625,16 @@ function addToCart(id){
   else cart.push({id, name:product.name, price:product.price, image:product.image, qty:1});
   saveCart();
   toast('Cart এ যোগ হয়েছে');
+
+  if(typeof fbq !== 'undefined'){
+    fbq('track','AddToCart',{content_ids:[product.id], content_name:product.name, value:product.price, currency:'BDT'});
+  }
+  if(typeof ttq !== 'undefined'){
+    ttq.track('AddToCart',{content_id:product.id, content_name:product.name, value:product.price, currency:'BDT'});
+  }
+  if(typeof gtag !== 'undefined'){
+    gtag('event','add_to_cart',{currency:'BDT', value:product.price, items:[{item_id:product.id, item_name:product.name}]});
+  }
 }
 
 function updateCartUI(){
@@ -604,6 +704,17 @@ document.getElementById('goCheckout').addEventListener('click', ()=>{
   cartDrawer.classList.remove('open');
   checkoutDrawer.classList.add('open');
   renderCheckoutSummary();
+
+  const total = cart.reduce((s,c)=>s+c.price*c.qty,0);
+  if(typeof fbq !== 'undefined'){
+    fbq('track','InitiateCheckout',{value: total, currency:'BDT', num_items: cart.length});
+  }
+  if(typeof ttq !== 'undefined'){
+    ttq.track('InitiateCheckout',{value: total, currency:'BDT'});
+  }
+  if(typeof gtag !== 'undefined'){
+    gtag('event','begin_checkout',{currency:'BDT', value: total});
+  }
 });
 document.getElementById('closeCheckout').addEventListener('click', ()=>{
   checkoutDrawer.classList.remove('open');
@@ -696,6 +807,12 @@ document.getElementById('placeOrderBtn').addEventListener('click', async ()=>{
     if(typeof fbq !== 'undefined'){
       fbq('track','Purchase',{value: total, currency:'BDT'});
     }
+    if(typeof ttq !== 'undefined'){
+      ttq.track('CompletePayment',{value: total, currency:'BDT'});
+    }
+    if(typeof gtag !== 'undefined'){
+      gtag('event','purchase',{currency:'BDT', value: total, transaction_id: orderRef.id});
+    }
     const shortId = orderRef.id.slice(-6).toUpperCase();
     document.getElementById('orderIdTag').textContent = 'Order ID: #' + shortId;
     document.getElementById('successOverlay').classList.add('show');
@@ -731,7 +848,46 @@ document.getElementById('sortSelect').addEventListener('change', (e)=>{
   renderProducts();
 });
 
-// ---------- Exit intent popup ----------
+// ---------- Bottom Navigation ----------
+document.querySelectorAll('.nav-item').forEach(item=>{
+  item.addEventListener('click', ()=>{
+    document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
+    item.classList.add('active');
+    const nav = item.dataset.nav;
+    if(nav === 'home'){
+      document.getElementById('homeSection').scrollIntoView({behavior:'smooth'});
+      activeCategory = 'all';
+      renderCategoryBar();
+      renderProducts();
+    }else if(nav === 'shop'){
+      document.getElementById('productGrid').scrollIntoView({behavior:'smooth'});
+    }else if(nav === 'offer'){
+      showOffersOnly = true;
+      renderProducts();
+      document.getElementById('productGrid').scrollIntoView({behavior:'smooth'});
+    }else if(nav === 'contact'){
+      document.getElementById('contactSection').scrollIntoView({behavior:'smooth'});
+    }
+    if(nav !== 'offer') showOffersOnly = false;
+  });
+});
+let showOffersOnly = false;
+
+// ---------- Countdown Timer (resets daily at midnight) ----------
+function updateCountdown(){
+  const now = new Date();
+  const midnight = new Date(now);
+  midnight.setHours(24,0,0,0);
+  const diff = midnight - now;
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const s = Math.floor((diff % 60000) / 1000);
+  document.getElementById('cdHours').textContent = String(h).padStart(2,'0');
+  document.getElementById('cdMinutes').textContent = String(m).padStart(2,'0');
+  document.getElementById('cdSeconds').textContent = String(s).padStart(2,'0');
+}
+setInterval(updateCountdown, 1000);
+updateCountdown();
 let exitShown = false;
 document.addEventListener('mouseleave', (e)=>{
   if(e.clientY < 10 && !exitShown && cart.length === 0){
