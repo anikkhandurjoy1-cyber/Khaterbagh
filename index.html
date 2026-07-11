@@ -181,11 +181,12 @@
   .countdown .cbox{background:rgba(255,255,255,.2);border-radius:6px;padding:4px 8px;font-size:13px;font-weight:700;min-width:32px;text-align:center;}
 
   /* Banner slideshow */
-  .banner-slide{display:none;width:100%;position:relative;}
-  .banner-slide.active{display:block;}
-  .banner-slide img{width:100%;height:auto;display:block;}
-  .banner-slide .slide-caption{position:absolute;bottom:0;left:0;right:0;padding:14px 16px;background:linear-gradient(transparent,rgba(0,0,0,.55));color:#fff;text-align:left;}
-  .banner-slide .gradient-box{aspect-ratio:2.2/1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#fff;padding:0 20px;}
+  .banner-wrap{position:relative;overflow:hidden;height:220px;background:#05050a;}
+  @media(min-width:600px){.banner-wrap{height:340px;}}
+  .banner-slide{position:absolute;inset:0;width:100%;height:100%;opacity:0;transform:scale(1.04);transition:opacity 1s ease,transform 1.2s ease;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#fff;padding:0 20px;background-size:contain;background-repeat:no-repeat;background-position:center;background-color:#0d0d14;}
+  .banner-slide.active{opacity:1;transform:scale(1);z-index:2;}
+  .banner-slide .slide-caption{position:absolute;bottom:0;left:0;right:0;padding:14px 16px;background:linear-gradient(transparent,rgba(0,0,0,.6));color:#fff;text-align:left;}
+  .banner-slide .gradient-box{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#fff;padding:0 20px;}
   .banner-dot{width:7px;height:7px;border-radius:50%;background:var(--border);cursor:pointer;}
   .banner-dot.active{background:var(--primary);}
   .buy-now-btn{width:100%;margin-top:8px;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;}
@@ -256,13 +257,13 @@
   <div class="page-section" id="page-home">
     <div class="hero banner-wrap" id="homeSection" style="position:relative;overflow:hidden;padding:0;">
       <div id="bannerTunnel"></div>
-      <div id="bannerSlides" style="position:relative;">
+      <div id="bannerSlides" style="position:relative;height:100%;">
         <div id="bannerSlidesInner"></div>
         <button class="banner-nav-btn" id="bannerPrev" aria-label="Previous">‹</button>
         <button class="banner-nav-btn" id="bannerNext" aria-label="Next" style="right:6px;left:auto;">›</button>
       </div>
-      <div id="bannerDots" style="display:flex;justify-content:center;gap:6px;padding:8px 0;"></div>
     </div>
+    <div id="bannerDots" style="display:flex;justify-content:center;gap:6px;padding:8px 0;"></div>
 
     <div class="cat-bar" id="catBar"></div>
 
@@ -1152,10 +1153,10 @@ function renderBanners(banners){
   if(bannerTimer) clearInterval(bannerTimer);
 
   if(banners.length === 0){
-    slidesWrap.innerHTML = `<div class="banner-slide active"><div class="gradient-box" style="background:linear-gradient(135deg,var(--primary),var(--primary-dark));">
+    slidesWrap.innerHTML = `<div class="banner-slide active" style="background:linear-gradient(135deg,var(--primary),var(--primary-dark));">
       <div style="font-size:20px;font-weight:700;">খাটেরবাঘ - বিশ্বস্ত অনলাইন শপিং</div>
       <div style="font-size:13px;opacity:.9;margin-top:4px;">সারা বাংলাদেশে হোম ডেলিভারি | ক্যাশ অন ডেলিভারি সুবিধা</div>
-    </div></div>`;
+    </div>`;
     dotsWrap.innerHTML = '';
     return;
   }
@@ -1174,15 +1175,12 @@ function renderBanners(banners){
 
   slidesWrap.innerHTML = flatSlides.map((b,i)=>{
     if(b.type==='image' && b.url){
-      // Real <img> tag: full image always visible, container auto-sizes to the image's own aspect ratio (no crop, no empty space)
       const caption = (b.text || b.sub) ? `<div class="slide-caption">${b.text?`<div style="font-weight:700;">${b.text}</div>`:''}${b.sub?`<div style="font-size:12px;opacity:.9;">${b.sub}</div>`:''}</div>` : '';
-      return `<div class="banner-slide${i===0?' active':''}" data-i="${i}"><img src="${b.url}" alt="Khaterbagh banner" loading="${i===0?'eager':'lazy'}">${caption}</div>`;
+      return `<div class="banner-slide${i===0?' active':''}" data-i="${i}" style="background-image:url('${b.url}');">${caption}</div>`;
     }
-    return `<div class="banner-slide${i===0?' active':''}" data-i="${i}">
-      <div class="gradient-box" style="background:${b.bg || 'linear-gradient(135deg,var(--primary),var(--primary-dark))'};">
+    return `<div class="banner-slide${i===0?' active':''}" data-i="${i}" style="background:${b.bg || 'linear-gradient(135deg,var(--primary),var(--primary-dark))'};">
         ${b.text ? `<div style="font-size:20px;font-weight:700;">${b.text}</div>` : ''}
         ${b.sub ? `<div style="font-size:13px;opacity:.9;margin-top:4px;">${b.sub}</div>` : ''}
-      </div>
     </div>`;
   }).join('');
   dotsWrap.innerHTML = flatSlides.map((_,i)=>`<div class="banner-dot${i===0?' active':''}" data-i="${i}"></div>`).join('');
