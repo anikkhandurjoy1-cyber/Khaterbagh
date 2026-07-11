@@ -1142,26 +1142,28 @@ function renderEoItems(){
         <span style="flex:1;">${it.name}</span>
         <input type="number" min="1" value="${it.qty}" data-idx="${idx}" class="eo-qty" style="width:55px;padding:4px;border:1px solid var(--border);border-radius:6px;">
         <span style="width:70px;text-align:right;">${tk(it.price*it.qty)}</span>
-        <button type="button" class="eo-remove-item" data-idx="${idx}" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;">×</button>
+        <button type="button" data-idx="${idx}" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;" onclick="window.__eoRemoveItem(${idx})">×</button>
       </div>
     `).join('');
-    wrap.querySelectorAll('.eo-qty').forEach(inp=>{
-      inp.addEventListener('input', ()=>{
-        const idx = Number(inp.dataset.idx);
-        editingOrderItems[idx].qty = Math.max(1, Number(inp.value)||1);
-        renderEoItems();
-      });
-    });
-    wrap.querySelectorAll('.eo-remove-item').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        editingOrderItems.splice(Number(btn.dataset.idx),1);
-        renderEoItems();
-      });
-    });
   }
   const total = editingOrderItems.reduce((s,i)=>s+i.price*i.qty,0);
   document.getElementById('eo-total').textContent = tk(total);
 }
+// Event delegation: bind once on the wrapper so re-renders never lose or duplicate listeners
+document.getElementById('eo-items').addEventListener('input', (e)=>{
+  if(e.target.classList.contains('eo-qty')){
+    const idx = Number(e.target.dataset.idx);
+    editingOrderItems[idx].qty = Math.max(1, Number(e.target.value)||1);
+    const total = editingOrderItems.reduce((s,i)=>s+i.price*i.qty,0);
+    document.getElementById('eo-total').textContent = tk(total);
+    const priceSpan = e.target.nextElementSibling;
+    if(priceSpan) priceSpan.textContent = tk(editingOrderItems[idx].price * editingOrderItems[idx].qty);
+  }
+});
+window.__eoRemoveItem = function(idx){
+  editingOrderItems.splice(idx,1);
+  renderEoItems();
+};
 document.getElementById('eo-add-item-btn').addEventListener('click', ()=>{
   const pid = document.getElementById('eo-add-product').value;
   if(!pid) return;
@@ -1203,6 +1205,10 @@ document.getElementById('closeViewOrderModal').addEventListener('click', ()=>{
 });
 document.getElementById('saveOrderEditBtn').addEventListener('click', async ()=>{
   const id = document.getElementById('eo-id').value;
+  if(editingOrderItems.length === 0){
+    toast('অর্ডারে কমপক্ষে ১টি পণ্য থাকতে হবে');
+    return;
+  }
   const total = editingOrderItems.reduce((s,i)=>s+i.price*i.qty,0);
   const data = {
     customerName: document.getElementById('eo-name').value.trim(),
