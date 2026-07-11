@@ -431,6 +431,7 @@ td{padding:9px 8px;border-top:1px solid var(--border);white-space:nowrap;}
       <div class="form-group" style="margin-bottom:10px;"><label>Top bar text</label><input type="text" id="sTopbar"></div>
       <div class="form-group" style="margin-bottom:10px;"><label>Thank you page message</label><input type="text" id="sThankyou"></div>
       <div class="form-group" style="margin-bottom:10px;"><label>Footer text</label><input type="text" id="sFooter"></div>
+      <div class="form-group" style="margin-bottom:10px;"><label>Product Disclaimer (সব পণ্যের description-এ automatic দেখাবে)</label><textarea id="sProductDisclaimer" rows="2" placeholder="যেমন: ছবি প্রতীকী, প্রকৃত রং সামান্য ভিন্ন হতে পারে।"></textarea></div>
       <button class="btn btn-primary btn-sm" id="saveGeneralBtn">Save General</button>
     </div>
 
@@ -983,6 +984,7 @@ function renderOrderTable(){
           </select>
         </td>
         <td>
+          ${status==='Processing' || status==='Payment Pending' || status==='On Hold' ? `<button class="btn btn-primary btn-sm approve-order" data-id="${o.id}">✓ Approve</button>` : ''}
           <button class="btn btn-outline btn-sm view-order" data-id="${o.id}">👁️</button>
           <button class="btn btn-outline btn-sm edit-order" data-id="${o.id}">Edit</button>
           <button class="btn btn-outline btn-sm print-order" data-id="${o.id}">🖨️</button>
@@ -998,6 +1000,7 @@ function renderOrderTable(){
   tb.querySelectorAll('.courier-select').forEach(sel=>{
     sel.addEventListener('change', ()=>updateOrder(sel.dataset.id, {courier: sel.value}, false));
   });
+  tb.querySelectorAll('.approve-order').forEach(b=>b.addEventListener('click', ()=>updateOrder(b.dataset.id, {status:'Invoiced'}, false)));
   tb.querySelectorAll('.view-order').forEach(b=>b.addEventListener('click', ()=>openViewOrderModal(b.dataset.id)));
   tb.querySelectorAll('.edit-order').forEach(b=>b.addEventListener('click', ()=>openOrderEditModal(b.dataset.id)));
   tb.querySelectorAll('.print-order').forEach(b=>b.addEventListener('click', ()=>printOrders([allOrders.find(o=>o.id===b.dataset.id)])));
@@ -1487,7 +1490,7 @@ onSnapshot(doc(db,'settings','general'), (snap)=>{
 function loadSettingsIntoForm(){
   const g = (id,key)=>{ const el = document.getElementById(id); if(el && siteSettings[key]!==undefined) el.value = siteSettings[key]; };
   g('sSitename','sitename'); g('sPhone','phone'); g('sAddress','address'); g('sTopbar','topbar');
-  g('sThankyou','thankyou'); g('sFooter','footer');
+  g('sThankyou','thankyou'); g('sFooter','footer'); g('sProductDisclaimer','product_disclaimer');
   g('sInsideCharge','dhaka_inside'); g('sOutsideCharge','dhaka_outside');
   g('sInvoicePrefix','invoice_prefix'); g('sInvoicePerPage','invoice_perpage');
   g('sFb','fb'); g('sTiktok','tiktok'); g('sYt','yt'); g('sIg','ig'); g('sWa','wa');
@@ -1503,7 +1506,7 @@ async function saveSettingsFields(fields){
   }catch(e){ console.error(e); toast('সমস্যা হয়েছে'); }
 }
 document.getElementById('saveGeneralBtn').addEventListener('click', ()=>saveSettingsFields([
-  ['sitename','sSitename'],['phone','sPhone'],['address','sAddress'],['topbar','sTopbar'],['thankyou','sThankyou'],['footer','sFooter']
+  ['sitename','sSitename'],['phone','sPhone'],['address','sAddress'],['topbar','sTopbar'],['thankyou','sThankyou'],['footer','sFooter'],['product_disclaimer','sProductDisclaimer']
 ]));
 document.getElementById('saveDeliveryBtn').addEventListener('click', ()=>saveSettingsFields([
   ['dhaka_inside','sInsideCharge'],['dhaka_outside','sOutsideCharge']
