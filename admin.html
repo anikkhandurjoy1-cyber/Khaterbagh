@@ -788,7 +788,7 @@ document.getElementById('fileInput').addEventListener('change', async (e)=>{
       xhr.onload = ()=>{
         if(xhr.status===200){
           const data = JSON.parse(xhr.responseText);
-          uploadedImages.push(data.secure_url.replace('/upload/','/upload/f_auto,q_auto/'));
+          uploadedImages.push(data.secure_url.replace('/upload/','/upload/f_auto,q_auto,w_800,c_limit/'));
         }else{ toast('একটি ছবি আপলোড ব্যর্থ হয়েছে'); }
         done++;
         document.getElementById('uploadText').textContent = `আপলোড হচ্ছে... (${done}/${files.length})`;
@@ -1397,7 +1397,7 @@ document.getElementById('bannerFileInput').addEventListener('change', async (e)=
       xhr.onload = ()=>{
         if(xhr.status===200){
           const data = JSON.parse(xhr.responseText);
-          bannerImages.push(data.secure_url.replace('/upload/','/upload/f_auto,q_auto/'));
+          bannerImages.push(data.secure_url.replace('/upload/','/upload/f_auto,q_auto,w_1600,c_limit/'));
         }
         resolve();
       };
@@ -1611,7 +1611,7 @@ document.getElementById('logoFileInput').addEventListener('change', async (e)=>{
     xhr.onload = async ()=>{
       if(xhr.status===200){
         const data = JSON.parse(xhr.responseText);
-        const logoUrl = data.secure_url.replace('/upload/','/upload/f_auto,q_auto/');
+        const logoUrl = data.secure_url.replace('/upload/','/upload/f_auto,q_auto,w_300,c_limit/');
         await setDoc(doc(db,'settings','general'), {logoUrl}, {merge:true});
         document.getElementById('logoUploadText').textContent = '📷 লোগো পরিবর্তন করতে ক্লিক করুন';
         toast('লোগো আপডেট হয়েছে');
