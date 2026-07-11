@@ -181,9 +181,9 @@
   .countdown .cbox{background:rgba(255,255,255,.2);border-radius:6px;padding:4px 8px;font-size:13px;font-weight:700;min-width:32px;text-align:center;}
 
   /* Banner slideshow */
-  .banner-wrap{position:relative;overflow:hidden;height:220px;background:#05050a;}
+  .banner-wrap{position:relative;overflow:hidden;height:220px;background:var(--primary-dark);}
   @media(min-width:600px){.banner-wrap{height:340px;}}
-  .banner-slide{position:absolute;inset:0;width:100%;height:100%;opacity:0;transform:scale(1.04);transition:opacity 1s ease,transform 1.2s ease;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#fff;padding:0 20px;background-size:contain;background-repeat:no-repeat;background-position:center;background-color:#0d0d14;}
+  .banner-slide{position:absolute;inset:0;width:100%;height:100%;opacity:0;transform:scale(1.04);transition:opacity 1s ease,transform 1.2s ease;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#fff;padding:0 20px;background-size:contain;background-repeat:no-repeat;background-position:center;background-color:var(--primary-dark);}
   .banner-slide.active{opacity:1;transform:scale(1);z-index:2;}
   .banner-slide .slide-caption{position:absolute;bottom:0;left:0;right:0;padding:14px 16px;background:linear-gradient(transparent,rgba(0,0,0,.6));color:#fff;text-align:left;}
   .banner-slide .gradient-box{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#fff;padding:0 20px;}
@@ -497,6 +497,12 @@ enableIndexedDbPersistence(db).catch((err)=>{
 
 // ---------- Utility ----------
 function tk(n){ return "৳" + Number(n||0).toLocaleString('en-BD'); }
+// Injects a width/quality transform into any Cloudinary URL so images are always served
+// at the right size for their context — fixes both new AND already-uploaded images.
+function cldResize(url, width){
+  if(!url || !url.includes('/upload/')) return url;
+  return url.replace('/upload/', `/upload/f_auto,q_auto,w_${width},c_limit/`);
+}
 function toast(msg){
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -530,7 +536,7 @@ onSnapshot(doc(db,'settings','general'), (snap)=>{
   siteSettings = snap.exists() ? snap.data() : {};
   renderCheckoutSummary();
   renderSocialLinks();
-  document.getElementById('siteLogo').src = siteSettings.logoUrl || DEFAULT_LOGO;
+  document.getElementById('siteLogo').src = siteSettings.logoUrl ? cldResize(siteSettings.logoUrl, 150) : DEFAULT_LOGO;
 });
 function renderSocialLinks(){
   const links = [
@@ -551,7 +557,7 @@ function getDeliveryCharge(){
 
 // ---------- State ----------
 let allProducts = [];
-let categories = new Set();
+let categories = [];
 let activeCategory = 'all';
 let searchTerm = '';
 let maxPrice = 50000;
@@ -562,6 +568,13 @@ function saveCart(){
   localStorage.setItem('kb_cart', JSON.stringify(cart));
   updateCartUI();
 }
+
+// ---------- Categories (admin-managed, source of truth) ----------
+onSnapshot(query(collection(db,'categories'), orderBy('name')), (snap)=>{
+  categories = [];
+  snap.forEach(d=>categories.push(d.data().name));
+  renderCategoryBar();
+});
 
 // ---------- Load products (lazy paginated) ----------
 async function loadProducts(){
@@ -577,14 +590,11 @@ async function loadProducts(){
   let firstSnapshot = true;
   onSnapshot(q, (snap)=>{
     allProducts = [];
-    categories = new Set();
     snap.forEach(d=>{
       const p = d.data();
       p.id = d.id;
       allProducts.push(p);
-      if(p.category) categories.add(p.category);
     });
-    renderCategoryBar();
     if(firstSnapshot){
       applyDeepLink();
       firstSnapshot = false;
@@ -599,7 +609,7 @@ async function loadProducts(){
 
 function renderCategoryBar(){
   const bar = document.getElementById('catBar');
-  const cats = ['all', ...Array.from(categories)];
+  const cats = ['all', ...categories];
   bar.innerHTML = cats.map(c=>`<div class="cat-chip ${c===activeCategory?'active':''}" data-cat="${c}">${c==='all'?'All':c}</div>`).join('');
   bar.querySelectorAll('.cat-chip').forEach(chip=>{
     chip.addEventListener('click',()=>{
@@ -664,7 +674,7 @@ function renderProducts(){
 
   grid.innerHTML = list.map(p=>`
     <div class="card" data-id="${p.id}">
-      <img data-src="${p.image||''}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'/%3E" alt="${p.name||''}" class="lazy-img">
+      <img data-src="${cldResize(p.image,320)||''}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'/%3E" alt="${p.name||''}" class="lazy-img">
       <div class="card-body">
         <div class="card-title">${p.name||'Untitled'}</div>
         <div class="stars">★★★★★<span class="rating-count">(${p.reviewCount||'১২'}+)</span></div>
@@ -694,13 +704,13 @@ function openQuickView(id){
   const p = allProducts.find(x=>x.id===id);
   if(!p) return;
   const images = (p.images && p.images.length) ? p.images : (p.image ? [p.image] : []);
-  document.getElementById('qvImg').src = images[0] || '';
+  document.getElementById('qvImg').src = cldResize(images[0], 700) || '';
   const thumbsWrap = document.getElementById('qvThumbs');
   if(images.length > 1){
-    thumbsWrap.innerHTML = images.map((img,idx)=>`<img src="${img}" data-idx="${idx}" style="width:48px;height:48px;object-fit:cover;border-radius:6px;cursor:pointer;flex-shrink:0;border:2px solid ${idx===0?'var(--primary)':'transparent'};">`).join('');
+    thumbsWrap.innerHTML = images.map((img,idx)=>`<img src="${cldResize(img,100)}" data-idx="${idx}" style="width:48px;height:48px;object-fit:cover;border-radius:6px;cursor:pointer;flex-shrink:0;border:2px solid ${idx===0?'var(--primary)':'transparent'};">`).join('');
     thumbsWrap.querySelectorAll('img').forEach(thumb=>{
       thumb.addEventListener('click', ()=>{
-        document.getElementById('qvImg').src = images[Number(thumb.dataset.idx)];
+        document.getElementById('qvImg').src = cldResize(images[Number(thumb.dataset.idx)], 700);
         thumbsWrap.querySelectorAll('img').forEach(t=>t.style.border='2px solid transparent');
         thumb.style.border = '2px solid var(--primary)';
       });
@@ -775,7 +785,7 @@ function renderRecentlyViewed(){
     <div class="grid">
       ${recent.map(p=>`
         <div class="card" data-id="${p.id}">
-          <img src="${p.image||''}" alt="${p.name}">
+          <img src="${cldResize(p.image,200)||''}" alt="${p.name}">
           <div class="card-body">
             <div class="card-title">${p.name}</div>
             <span class="card-price">${tk(p.price)}</span>
@@ -834,7 +844,7 @@ function updateCartUI(){
   }else{
     body.innerHTML = cart.map(c=>`
       <div class="cart-item" data-id="${c.id}">
-        <img src="${c.image||''}" alt="">
+        <img src="${cldResize(c.image,150)||''}" alt="">
         <div class="cart-item-info">
           <div class="cart-item-title">${c.name}</div>
           <div class="qty-ctrl">
@@ -1176,7 +1186,7 @@ function renderBanners(banners){
   slidesWrap.innerHTML = flatSlides.map((b,i)=>{
     if(b.type==='image' && b.url){
       const caption = (b.text || b.sub) ? `<div class="slide-caption">${b.text?`<div style="font-weight:700;">${b.text}</div>`:''}${b.sub?`<div style="font-size:12px;opacity:.9;">${b.sub}</div>`:''}</div>` : '';
-      return `<div class="banner-slide${i===0?' active':''}" data-i="${i}" style="background-image:url('${b.url}');">${caption}</div>`;
+      return `<div class="banner-slide${i===0?' active':''}" data-i="${i}" style="background-image:url('${cldResize(b.url,1200)}');">${caption}</div>`;
     }
     return `<div class="banner-slide${i===0?' active':''}" data-i="${i}" style="background:${b.bg || 'linear-gradient(135deg,var(--primary),var(--primary-dark))'};">
         ${b.text ? `<div style="font-size:20px;font-weight:700;">${b.text}</div>` : ''}
@@ -1205,7 +1215,7 @@ function renderTunnelCards(){
   if(images.length === 0){ tunnel.innerHTML = ''; return; }
   tunnel.innerHTML = positions.slice(0, images.length).map((pos,i)=>{
     const sideStyle = pos.side==='left' ? `left:4%;` : `right:4%;`;
-    return `<div class="tunnel-card" style="top:${pos.top};${sideStyle}background-image:url('${images[i]}');animation-delay:${i*0.7}s;"></div>`;
+    return `<div class="tunnel-card" style="top:${pos.top};${sideStyle}background-image:url('${cldResize(images[i],100)}');animation-delay:${i*0.7}s;"></div>`;
   }).join('');
 }
 function goBanner(i){
@@ -1244,7 +1254,7 @@ document.addEventListener('mouseleave', (e)=>{
     if(!exitBestProduct) return;
     document.getElementById('exitProductShowcase').innerHTML = `
       <div style="display:flex;align-items:center;gap:10px;background:var(--bg);border-radius:8px;padding:10px;margin:10px 0;text-align:left;">
-        <img src="${exitBestProduct.image||''}" style="width:56px;height:56px;object-fit:cover;border-radius:6px;">
+        <img src="${cldResize(exitBestProduct.image,150)||''}" style="width:56px;height:56px;object-fit:cover;border-radius:6px;">
         <div>
           <div style="font-size:13px;font-weight:600;">${exitBestProduct.name}</div>
           <div><span style="color:var(--primary);font-weight:700;">${tk(exitBestProduct.price)}</span>
