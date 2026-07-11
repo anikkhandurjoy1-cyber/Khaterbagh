@@ -290,6 +290,9 @@
     </div>
 
     <div class="grid" id="productGrid"></div>
+    <div style="text-align:center;margin:16px 0;">
+      <button id="loadMoreBtn" class="btn-outline" style="padding:10px 24px;border-radius:8px;border:1px solid var(--border);background:var(--card-bg);cursor:pointer;font-size:14px;">আরও দেখুন</button>
+    </div>
     <div id="recentlyViewedSection"></div>
 
     <div class="reviews-section">
@@ -474,7 +477,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import {
   getFirestore, collection, addDoc, getDocs, query, where, orderBy,
   serverTimestamp, limit, enableIndexedDbPersistence, onSnapshot,
-  doc, deleteDoc, setDoc
+  doc, deleteDoc, setDoc, startAfter
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -577,6 +580,11 @@ onSnapshot(query(collection(db,'categories'), orderBy('name')), (snap)=>{
 });
 
 // ---------- Load products (lazy paginated) ----------
+const PAGE_SIZE = 30;
+let lastVisibleDoc = null;
+let noMoreProducts = false;
+let loadingMore = false;
+
 async function loadProducts(){
   const grid = document.getElementById('productGrid');
   grid.innerHTML = Array.from({length:8}).map(()=>`
@@ -586,7 +594,9 @@ async function loadProducts(){
       <div class="skeleton sline" style="width:50%"></div>
     </div>`).join('');
 
-  const q = query(collection(db,'products'), orderBy('createdAt','desc'), limit(200));
+  // Real-time listener only for the first page — keeps new/updated products fresh
+  // without re-reading the whole catalog on every visit (keeps Firestore read costs low).
+  const q = query(collection(db,'products'), orderBy('createdAt','desc'), limit(PAGE_SIZE));
   let firstSnapshot = true;
   onSnapshot(q, (snap)=>{
     allProducts = [];
@@ -595,6 +605,8 @@ async function loadProducts(){
       p.id = d.id;
       allProducts.push(p);
     });
+    lastVisibleDoc = snap.docs[snap.docs.length-1] || null;
+    noMoreProducts = snap.docs.length < PAGE_SIZE;
     if(firstSnapshot){
       applyDeepLink();
       firstSnapshot = false;
@@ -606,6 +618,28 @@ async function loadProducts(){
     console.error(err);
   });
 }
+
+async function loadMoreProducts(){
+  if(loadingMore || noMoreProducts || !lastVisibleDoc) return;
+  loadingMore = true;
+  const btn = document.getElementById('loadMoreBtn');
+  if(btn) btn.textContent = 'লোড হচ্ছে...';
+  try{
+    const q = query(collection(db,'products'), orderBy('createdAt','desc'), startAfter(lastVisibleDoc), limit(PAGE_SIZE));
+    const snap = await getDocs(q);
+    snap.forEach(d=>{
+      const p = d.data();
+      p.id = d.id;
+      allProducts.push(p);
+    });
+    lastVisibleDoc = snap.docs[snap.docs.length-1] || lastVisibleDoc;
+    noMoreProducts = snap.docs.length < PAGE_SIZE;
+    renderProducts();
+  }catch(err){ console.error(err); }
+  loadingMore = false;
+  if(btn) btn.textContent = 'আরও দেখুন';
+}
+document.getElementById('loadMoreBtn').addEventListener('click', loadMoreProducts);
 
 function renderCategoryBar(){
   const bar = document.getElementById('catBar');
@@ -705,6 +739,12 @@ function renderProducts(){
       addToCart(btn.dataset.id);
     });
   });
+
+  // Only show "Load More" when browsing all products unfiltered — filters/search work on
+  // what's already loaded, avoiding extra reads while narrowing results.
+  const loadMoreBtn = document.getElementById('loadMoreBtn');
+  const noFiltersActive = activeCategory==='all' && !searchTerm && !showOffersOnly && maxPrice>=50000;
+  loadMoreBtn.style.display = (noFiltersActive && !noMoreProducts) ? 'inline-block' : 'none';
 }
 
 // ---------- Quick View ----------
