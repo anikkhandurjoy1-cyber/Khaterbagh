@@ -175,18 +175,18 @@
   body{padding-bottom:64px;}
 
   /* Countdown timer / offer banner */
-  .offer-banner{background:var(--accent);color:#fff;padding:14px 16px;margin-bottom:16px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
+  .offer-banner{position:absolute;left:0;right:0;bottom:0;background:rgba(216,90,48,.92);color:#fff;padding:8px 14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;z-index:6;}
   .offer-banner .offer-text{font-size:13px;font-weight:600;}
   .countdown{display:flex;gap:6px;}
   .countdown .cbox{background:rgba(255,255,255,.2);border-radius:6px;padding:4px 8px;font-size:13px;font-weight:700;min-width:32px;text-align:center;}
 
   /* Banner slideshow */
-  .banner-wrap{position:relative;overflow:hidden;height:220px;background:var(--primary-dark);}
-  @media(min-width:600px){.banner-wrap{height:340px;}}
-  .banner-slide{position:absolute;inset:0;width:100%;height:100%;opacity:0;transform:scale(1.04);transition:opacity 1s ease,transform 1.2s ease;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#fff;padding:0 20px;background-size:contain;background-repeat:no-repeat;background-position:center;background-color:var(--primary-dark);}
+  .banner-wrap{position:relative;overflow:hidden;height:150px;background:var(--primary-dark);}
+  @keyframes bannerSkeleton{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+  @media(min-width:600px){.banner-wrap{height:280px;}}
+  .banner-slide{position:absolute;inset:0;width:100%;height:100%;opacity:0;transform:scale(1.02);transition:opacity .5s ease,transform .6s ease;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#fff;padding:0 20px;background-size:contain;background-repeat:no-repeat;background-position:center;background-color:var(--primary-dark);}
   .banner-slide.active{opacity:1;transform:scale(1);z-index:2;}
   .banner-slide .slide-caption{position:absolute;bottom:0;left:0;right:0;padding:14px 16px;background:linear-gradient(transparent,rgba(0,0,0,.6));color:#fff;text-align:left;}
-  .banner-slide .gradient-box{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#fff;padding:0 20px;}
   .banner-dot{width:7px;height:7px;border-radius:50%;background:var(--border);cursor:pointer;}
   .banner-dot.active{background:var(--primary);}
   .buy-now-btn{width:100%;margin-top:8px;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;}
@@ -224,7 +224,6 @@
   .contact-title{font-weight:600;font-size:14px;margin-bottom:10px;}
   .contact-item{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:13px;}
   .contact-item a{color:var(--primary);font-weight:600;}
-  .delivery-charge-note{font-size:12px;color:var(--text-light);margin-top:4px;}
 </style>
 </head>
 <body>
@@ -258,23 +257,22 @@
     <div class="hero banner-wrap" id="homeSection" style="position:relative;overflow:hidden;padding:0;">
       <div id="bannerTunnel"></div>
       <div id="bannerSlides" style="position:relative;height:100%;">
-        <div id="bannerSlidesInner"></div>
+        <div id="bannerSlidesInner"><div class="banner-slide active" style="background:linear-gradient(90deg,var(--primary-dark) 25%,var(--primary) 50%,var(--primary-dark) 75%);background-size:200% 100%;animation:bannerSkeleton 1.4s infinite;"></div></div>
         <button class="banner-nav-btn" id="bannerPrev" aria-label="Previous">‹</button>
         <button class="banner-nav-btn" id="bannerNext" aria-label="Next" style="right:6px;left:auto;">›</button>
+      </div>
+      <div class="offer-banner" id="offerBanner">
+        <div class="offer-text">🔥 আজকের অফার শেষ হবে</div>
+        <div class="countdown" id="countdownTimer">
+          <div class="cbox" id="cdHours">00</div>
+          <div class="cbox" id="cdMinutes">00</div>
+          <div class="cbox" id="cdSeconds">00</div>
+        </div>
       </div>
     </div>
     <div id="bannerDots" style="display:flex;justify-content:center;gap:6px;padding:8px 0;"></div>
 
     <div class="cat-bar" id="catBar"></div>
-
-    <div class="offer-banner" id="offerBanner">
-      <div class="offer-text">🔥 আজকের অফার শেষ হবে</div>
-      <div class="countdown" id="countdownTimer">
-        <div class="cbox" id="cdHours">00</div>
-        <div class="cbox" id="cdMinutes">00</div>
-        <div class="cbox" id="cdSeconds">00</div>
-      </div>
-    </div>
 
     <div class="marquee-bar">
       <div class="marquee-inner">
@@ -388,6 +386,8 @@
   </div>
   <div class="drawer-body" id="cartBody"></div>
   <div class="drawer-footer">
+    <div class="returning-badge" id="cartReturningBadge">👋 স্বাগতম! আপনি আমাদের পুরনো কাস্টমার।</div>
+    <div class="form-group" style="margin-bottom:10px;"><label>ফোন নম্বর</label><input type="tel" id="cartPhone" placeholder="01XXXXXXXXX"></div>
     <div class="order-summary-row total"><span>সর্বমোট</span><span id="cartTotal">৳0</span></div>
     <button class="checkout-btn" id="goCheckout" style="margin-top:10px;">চেকআউট করুন</button>
   </div>
@@ -621,6 +621,14 @@ function renderCategoryBar(){
         document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
         document.querySelector('.nav-item[data-nav="shop"]').classList.add('active');
       }
+      // Reflect selected category in the URL — shareable/ad-friendly, e.g. ?category=Combo
+      try{
+        const url = new URL(window.location.href);
+        if(url.searchParams.has('product')) url.searchParams.delete('product');
+        if(activeCategory === 'all') url.searchParams.delete('category');
+        else url.searchParams.set('category', activeCategory);
+        history.pushState({category:activeCategory}, '', url.toString());
+      }catch(e){}
     });
   });
 }
@@ -734,9 +742,25 @@ function openQuickView(id){
   if(typeof gtag !== 'undefined'){
     gtag('event','view_item',{currency:'BDT', value:p.price, items:[{item_id:p.id, item_name:p.name}]});
   }
+  // Reflect the open product in the URL — shareable link / ad destination, e.g. ?product=DOCID
+  try{
+    const url = new URL(window.location.href);
+    if(url.searchParams.get('product') !== id){
+      url.searchParams.set('product', id);
+      history.pushState({product:id}, '', url.toString());
+    }
+  }catch(e){}
 }
 document.getElementById('qvClose').addEventListener('click', ()=>{
   document.getElementById('qvOverlay').classList.remove('show');
+  // Remove ?product=... from the URL when closing the detail view
+  try{
+    const url = new URL(window.location.href);
+    if(url.searchParams.has('product')){
+      url.searchParams.delete('product');
+      history.pushState({}, '', url.toString());
+    }
+  }catch(e){}
 });
 document.getElementById('qvImg').addEventListener('click', ()=>{
   document.getElementById('zoomImg').src = document.getElementById('qvImg').src;
@@ -749,7 +773,16 @@ document.getElementById('zoomOverlay').addEventListener('click', (e)=>{
   if(e.target.id === 'zoomOverlay') document.getElementById('zoomOverlay').classList.remove('show');
 });
 document.getElementById('qvOverlay').addEventListener('click', (e)=>{
-  if(e.target.id === 'qvOverlay') document.getElementById('qvOverlay').classList.remove('show');
+  if(e.target.id === 'qvOverlay'){
+    document.getElementById('qvOverlay').classList.remove('show');
+    try{
+      const url = new URL(window.location.href);
+      if(url.searchParams.has('product')){
+        url.searchParams.delete('product');
+        history.pushState({}, '', url.toString());
+      }
+    }catch(e2){}
+  }
 });
 document.getElementById('qvAddBtn').addEventListener('click', (e)=>{
   addToCart(e.target.dataset.id);
@@ -900,6 +933,11 @@ cartOverlay.addEventListener('click', ()=>{
 });
 document.getElementById('goCheckout').addEventListener('click', ()=>{
   if(cart.length===0){ toast('কার্ট খালি আছে'); return; }
+  const cartPhoneVal = document.getElementById('cartPhone').value.trim();
+  if(cartPhoneVal && !document.getElementById('custPhone').value){
+    document.getElementById('custPhone').value = cartPhoneVal;
+    checkReturningCustomer(cartPhoneVal, 'returningBadge', true);
+  }
   cartDrawer.classList.remove('open');
   checkoutDrawer.classList.add('open');
   renderCheckoutSummary();
@@ -966,32 +1004,43 @@ function renderCheckoutSummary(){
 }
 
 // ---------- Returning customer detection ----------
-let phoneCheckTimeout;
-document.getElementById('custPhone').addEventListener('input', (e)=>{
-  clearTimeout(phoneCheckTimeout);
-  const phone = e.target.value.trim();
+async function checkReturningCustomer(phone, badgeId, prefill){
   if(phone.length < 11){
-    document.getElementById('returningBadge').classList.remove('show');
+    document.getElementById(badgeId).classList.remove('show');
     return;
   }
-  phoneCheckTimeout = setTimeout(async ()=>{
-    try{
-      const q = query(collection(db,'orders'), where('phone','==',phone), limit(1));
-      const snap = await getDocs(q);
-      if(!snap.empty){
-        const prevOrder = snap.docs[0].data();
-        document.getElementById('returningBadge').classList.add('show');
+  try{
+    const q = query(collection(db,'orders'), where('phone','==',phone), limit(1));
+    const snap = await getDocs(q);
+    if(!snap.empty){
+      const prevOrder = snap.docs[0].data();
+      document.getElementById(badgeId).classList.add('show');
+      if(prefill){
         if(prevOrder.customerName && !document.getElementById('custName').value){
           document.getElementById('custName').value = prevOrder.customerName;
         }
         if(prevOrder.address && !document.getElementById('custAddress').value){
           document.getElementById('custAddress').value = prevOrder.address;
         }
-      }else{
-        document.getElementById('returningBadge').classList.remove('show');
       }
-    }catch(err){ console.error(err); }
-  }, 500);
+    }else{
+      document.getElementById(badgeId).classList.remove('show');
+    }
+  }catch(err){ console.error(err); }
+}
+
+let phoneCheckTimeout;
+document.getElementById('custPhone').addEventListener('input', (e)=>{
+  clearTimeout(phoneCheckTimeout);
+  const phone = e.target.value.trim();
+  phoneCheckTimeout = setTimeout(()=>checkReturningCustomer(phone, 'returningBadge', true), 500);
+});
+
+let cartPhoneCheckTimeout;
+document.getElementById('cartPhone').addEventListener('input', (e)=>{
+  clearTimeout(cartPhoneCheckTimeout);
+  const phone = e.target.value.trim();
+  cartPhoneCheckTimeout = setTimeout(()=>checkReturningCustomer(phone, 'cartReturningBadge', false), 500);
 });
 
 // ---------- Place order ----------
@@ -1076,6 +1125,8 @@ document.getElementById('placeOrderBtn').addEventListener('click', async ()=>{
     document.getElementById('orderIdTag').textContent = 'Order ID: #' + shortId;
     document.getElementById('successOverlay').classList.add('show');
     document.getElementById('custName').value='';
+    document.getElementById('cartPhone').value='';
+    document.getElementById('cartReturningBadge').classList.remove('show');
     document.getElementById('custPhone').value='';
     document.getElementById('custAddress').value='';
     document.getElementById('custNotes').value='';
@@ -1186,7 +1237,8 @@ function renderBanners(banners){
   slidesWrap.innerHTML = flatSlides.map((b,i)=>{
     if(b.type==='image' && b.url){
       const caption = (b.text || b.sub) ? `<div class="slide-caption">${b.text?`<div style="font-weight:700;">${b.text}</div>`:''}${b.sub?`<div style="font-size:12px;opacity:.9;">${b.sub}</div>`:''}</div>` : '';
-      return `<div class="banner-slide${i===0?' active':''}" data-i="${i}" style="background-image:url('${cldResize(b.url,1200)}');">${caption}</div>`;
+      const bannerWidth = window.innerWidth <= 480 ? 700 : (window.innerWidth <= 900 ? 1000 : 1400);
+      return `<div class="banner-slide${i===0?' active':''}" data-i="${i}" style="background-image:url('${cldResize(b.url,bannerWidth)}');">${caption}</div>`;
     }
     return `<div class="banner-slide${i===0?' active':''}" data-i="${i}" style="background:${b.bg || 'linear-gradient(135deg,var(--primary),var(--primary-dark))'};">
         ${b.text ? `<div style="font-size:20px;font-weight:700;">${b.text}</div>` : ''}
