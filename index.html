@@ -542,10 +542,8 @@ function renderSocialLinks(){
   document.getElementById('footerSocialWrap').innerHTML = footerHtml;
 }
 function getDeliveryCharge(){
-  const city = document.getElementById('custCity').value;
-  if(!city) return 0;
-  if(city === 'Dhaka') return Number(siteSettings.dhaka_inside) || 0;
-  return Number(siteSettings.dhaka_outside) || 0;
+  // Delivery is free sitewide — matches the "ফ্রি ডেলিভারি" promise shown across the site.
+  return 0;
 }
 
 // ---------- State ----------
@@ -1027,7 +1025,7 @@ function renderCheckoutSummary(){
   document.getElementById('checkoutSummary').innerHTML = `
     <div style="margin:14px 0;padding:12px;background:var(--bg);border-radius:8px;">
       ${items.map(c=>`<div class="order-summary-row"><span>${c.name} × ${c.qty}</span><span>${tk(c.price*c.qty)}</span></div>`).join('')}
-      <div class="order-summary-row"><span>ডেলিভারি চার্জ</span><span>${tk(deliveryCharge)}</span></div>
+      <div class="order-summary-row"><span>ডেলিভারি চার্জ</span><span style="color:var(--primary);font-weight:600;">ফ্রি</span></div>
       <div class="order-summary-row total"><span>সর্বমোট</span><span>${tk(total)}</span></div>
     </div>
   `;
