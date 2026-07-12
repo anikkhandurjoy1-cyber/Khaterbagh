@@ -433,7 +433,7 @@
   </div>
 </div>
 
-<!-- Meta Pixel Code -->
+<!-- Meta Pixel base loader (ID comes from Admin → Settings → Analytics, applied dynamically below) -->
 <script>
 !function(f,b,e,v,n,t,s)
 {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -443,33 +443,24 @@ n.queue=[];t=b.createElement(e);t.async=!0;
 t.src=v;s=b.getElementsByTagName(e)[0];
 s.parentNode.insertBefore(t,s)}(window, document,'script',
 'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '1055371280214419');
-fbq('track', 'PageView');
 </script>
-<noscript><img height="1" width="1" style="display:none"
-src="https://www.facebook.com/tr?id=1055371280214419&ev=PageView&noscript=1"
-/></noscript>
-<!-- End Meta Pixel Code -->
+<!-- End Meta Pixel base loader -->
 
-<!-- TikTok Pixel Code -->
+<!-- TikTok Pixel base loader (ID comes from Admin → Settings → Analytics, applied dynamically below) -->
 <script>
 !function (w, d, t) {
   w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<e.length;n++)ttq.setAndDefer(e,e[n]);return e},ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var a=document.createElement("script");a.type="text/javascript",a.async=!0,a.src=i+"?sdkid="+e+"&lib="+t;var s=document.getElementsByTagName("script")[0];s.parentNode.insertBefore(a,s)};
-  ttq.load('YOUR_TIKTOK_PIXEL_ID');
-  ttq.page();
 }(window, document, 'ttq');
 </script>
-<!-- End TikTok Pixel Code -->
+<!-- End TikTok Pixel base loader -->
 
-<!-- Google tag (Google Ads / Analytics) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=YOUR_GOOGLE_TAG_ID"></script>
+<!-- Google tag base loader (ID comes from Admin → Settings → Analytics, applied dynamically below) -->
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-  gtag('config', 'YOUR_GOOGLE_TAG_ID');
 </script>
-<!-- End Google tag -->
+<!-- End Google tag base loader -->
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -528,12 +519,37 @@ function setDeliveryLocation(loc){
 
 // ---------- Delivery charge (from admin Settings: Dhaka inside/outside) ----------
 let siteSettings = {};
+let pixelsInitialized = false;
 onSnapshot(doc(db,'settings','general'), (snap)=>{
   siteSettings = snap.exists() ? snap.data() : {};
   renderCheckoutSummary();
   renderSocialLinks();
   document.getElementById('siteLogo').src = siteSettings.logoUrl ? cldResize(siteSettings.logoUrl, 150) : DEFAULT_LOGO;
+  initPixelsFromSettings();
 });
+
+// Reads Pixel/Tag IDs saved in Admin → Settings → Analytics and activates each one —
+// so updating an ID there goes live immediately, with no code changes needed.
+function initPixelsFromSettings(){
+  if(pixelsInitialized) return;
+  pixelsInitialized = true;
+
+  if(siteSettings.fbpixel && typeof fbq !== 'undefined'){
+    fbq('init', siteSettings.fbpixel);
+    fbq('track', 'PageView');
+  }
+  if(siteSettings.tkpixel && typeof ttq !== 'undefined'){
+    ttq.load(siteSettings.tkpixel);
+    ttq.page();
+  }
+  if(siteSettings.ga && typeof gtag !== 'undefined'){
+    const gaScript = document.createElement('script');
+    gaScript.async = true;
+    gaScript.src = `https://www.googletagmanager.com/gtag/js?id=${siteSettings.ga}`;
+    document.head.appendChild(gaScript);
+    gtag('config', siteSettings.ga);
+  }
+}
 function renderSocialLinks(){
   const links = [
     ['fb','📘 Facebook'], ['tiktok','🎵 TikTok'], ['yt','▶️ YouTube'], ['ig','📷 Instagram']
