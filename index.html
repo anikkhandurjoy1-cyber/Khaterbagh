@@ -522,12 +522,24 @@ function setDeliveryLocation(loc){
 // ---------- Delivery charge (from admin Settings: Dhaka inside/outside) ----------
 let siteSettings = {};
 let pixelsInitialized = false;
+
+// Initialize pixels instantly from cache (no waiting on Firestore) so events never
+// fire before the pixel ID is known — closes the "event before init" timing gap.
+try{
+  const cachedSettings = JSON.parse(localStorage.getItem('kb_settings_cache') || 'null');
+  if(cachedSettings){
+    siteSettings = cachedSettings;
+    initPixelsFromSettings();
+  }
+}catch(e){}
+
 onSnapshot(doc(db,'settings','general'), (snap)=>{
   siteSettings = snap.exists() ? snap.data() : {};
   renderCheckoutSummary();
   renderSocialLinks();
   document.getElementById('siteLogo').src = siteSettings.logoUrl ? cldResize(siteSettings.logoUrl, 150) : DEFAULT_LOGO;
   initPixelsFromSettings();
+  try{ localStorage.setItem('kb_settings_cache', JSON.stringify(siteSettings)); }catch(e){}
 });
 
 // Reads Pixel/Tag IDs saved in Admin → Settings → Analytics and activates each one —
@@ -689,7 +701,7 @@ function applyDeepLink(){
     const p = allProducts.find(x=>x.id===productId);
     if(p){
       if(typeof fbq !== 'undefined'){
-        fbq('track','ViewContent',{content_ids:[p.id], content_type:'product', content_name:p.name, value:p.price, currency:'BDT'});
+        fbq('track','ViewContent',{content_ids:[p.id], content_type:'product', content_name:p.name||'Product', value:Number(p.price)||0, currency:'BDT'});
       }
       if(typeof gtag !== 'undefined'){
         gtag('event','view_item',{currency:'BDT', value:p.price, items:[{item_id:p.id, item_name:p.name}]});
@@ -789,7 +801,7 @@ function openQuickView(id){
   document.getElementById('qvOverlay').classList.add('show');
   saveRecentlyViewed(p);
   if(typeof fbq !== 'undefined'){
-    fbq('track','ViewContent',{content_ids:[p.id], content_type:'product', content_name:p.name, value:p.price, currency:'BDT'});
+    fbq('track','ViewContent',{content_ids:[p.id], content_type:'product', content_name:p.name||'Product', value:Number(p.price)||0, currency:'BDT'});
   }
   if(typeof ttq !== 'undefined'){
     ttq.track('ViewContent',{content_id:p.id, content_name:p.name, value:p.price, currency:'BDT'});
@@ -914,7 +926,7 @@ function addToCart(id){
   toast('Cart এ যোগ হয়েছে');
 
   if(typeof fbq !== 'undefined'){
-    fbq('track','AddToCart',{content_ids:[product.id], content_type:'product', content_name:product.name, value:product.price, currency:'BDT'});
+    fbq('track','AddToCart',{content_ids:[product.id], content_type:'product', content_name:product.name||'Product', value:Number(product.price)||0, currency:'BDT'});
   }
   if(typeof ttq !== 'undefined'){
     ttq.track('AddToCart',{content_id:product.id, content_name:product.name, value:product.price, currency:'BDT'});
@@ -1000,7 +1012,7 @@ document.getElementById('goCheckout').addEventListener('click', ()=>{
 
   const total = cart.reduce((s,c)=>s+c.price*c.qty,0);
   if(typeof fbq !== 'undefined'){
-    fbq('track','InitiateCheckout',{value: total, currency:'BDT', num_items: cart.length, content_ids: cart.map(c=>c.id), content_type:'product'});
+    fbq('track','InitiateCheckout',{value: Number(total)||0, currency:'BDT', num_items: cart.reduce((s,c)=>s+c.qty,0), content_ids: cart.map(c=>c.id), content_type:'product'});
   }
   if(typeof ttq !== 'undefined'){
     ttq.track('InitiateCheckout',{value: total, currency:'BDT'});
@@ -1188,13 +1200,14 @@ document.getElementById('placeOrderBtn').addEventListener('click', async ()=>{
     cartOverlay.classList.remove('open');
     if(typeof fbq !== 'undefined'){
       fbq('track','Purchase',{
-        value: total,
+        value: Number(total)||0,
         currency:'BDT',
-        content_ids: orderItems.map(i=>i.id),
+        content_ids: orderItems.map(i=>String(i.id)),
         content_type: 'product',
-        contents: orderItems.map(i=>({id:i.id, quantity:i.qty, item_price:i.price})),
-        num_items: orderItems.reduce((s,i)=>s+i.qty,0)
-      });
+        content_name: orderItems.map(i=>i.name).join(', '),
+        contents: orderItems.map(i=>({id:String(i.id), quantity:Number(i.qty)||1, item_price:Number(i.price)||0})),
+        num_items: orderItems.reduce((s,i)=>s+(Number(i.qty)||1),0)
+      }, {eventID: orderRef.id});
     }
     if(typeof ttq !== 'undefined'){
       ttq.track('CompletePayment',{
