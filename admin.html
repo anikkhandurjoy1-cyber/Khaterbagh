@@ -496,6 +496,16 @@ td{padding:9px 8px;border-top:1px solid var(--border);white-space:nowrap;}
     </div>
 
     <div class="card">
+      <h3>Login Email পরিবর্তন করুন</h3>
+      <div class="form-row">
+        <div class="form-group"><label>বর্তমান পাসওয়ার্ড</label><input type="password" id="sCurrentPasswordForEmail" placeholder="নিশ্চিতের জন্য বর্তমান পাসওয়ার্ড দিন"></div>
+        <div class="form-group"><label>নতুন Email</label><input type="email" id="sNewEmail" placeholder="নতুন লগইন ইমেইল"></div>
+      </div>
+      <button class="btn btn-primary btn-sm" id="changeEmailBtn">Email পরিবর্তন করুন</button>
+      <p style="font-size:12px;color:var(--muted);margin-top:8px;">নোট: Email পরিবর্তনের পর নতুন Email দিয়ে লগইন করতে হবে।</p>
+    </div>
+
+    <div class="card">
       <h3>Change Password</h3>
       <div class="form-row">
         <div class="form-group"><label>New Password</label><input type="password" id="sNewPassword" placeholder="নতুন পাসওয়ার্ড"></div>
@@ -585,7 +595,8 @@ td{padding:9px 8px;border-top:1px solid var(--border);white-space:nowrap;}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
-  getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, updatePassword
+  getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, updatePassword,
+  updateEmail, reauthenticateWithCredential, EmailAuthProvider
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
   getFirestore, collection, addDoc, updateDoc, deleteDoc, doc,
@@ -1660,6 +1671,26 @@ document.getElementById('saveAnalyticsBtn').addEventListener('click', ()=>saveSe
 document.getElementById('saveBlacklistBtn').addEventListener('click', ()=>saveSettingsFields([
   ['phone_blacklist','sPhoneBlacklist']
 ]));
+
+document.getElementById('changeEmailBtn').addEventListener('click', async ()=>{
+  const currentPassword = document.getElementById('sCurrentPasswordForEmail').value;
+  const newEmail = document.getElementById('sNewEmail').value.trim();
+  if(!currentPassword || !newEmail){ toast('বর্তমান পাসওয়ার্ড ও নতুন Email দিন'); return; }
+  try{
+    const credential = EmailAuthProvider.credential(auth.currentUser.email, currentPassword);
+    await reauthenticateWithCredential(auth.currentUser, credential);
+    await updateEmail(auth.currentUser, newEmail);
+    document.getElementById('sCurrentPasswordForEmail').value = '';
+    document.getElementById('sNewEmail').value = '';
+    toast('Email পরিবর্তন হয়েছে — নতুন Email দিয়ে পরের বার লগইন করুন');
+  }catch(e){
+    console.error(e);
+    if(e.code === 'auth/wrong-password'){ toast('বর্তমান পাসওয়ার্ড ভুল'); }
+    else if(e.code === 'auth/invalid-email'){ toast('সঠিক Email ফরম্যাট দিন'); }
+    else if(e.code === 'auth/email-already-in-use'){ toast('এই Email আগে থেকেই ব্যবহৃত হচ্ছে'); }
+    else { toast('সমস্যা হয়েছে, আবার চেষ্টা করুন'); }
+  }
+});
 
 document.getElementById('changePasswordBtn').addEventListener('click', async ()=>{
   const newPass = document.getElementById('sNewPassword').value;
