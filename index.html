@@ -93,6 +93,7 @@
   .form-group label{display:block;font-size:13px;margin-bottom:4px;color:var(--text-light);}
   .form-group input,.form-group textarea{width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-size:14px;}
   .returning-badge{background:#E1F5EE;color:var(--primary-dark);font-size:12px;padding:6px 10px;border-radius:6px;margin-bottom:12px;display:none;}
+  .returning-badge.warning{background:#FCEBEB;color:#791F1F;font-weight:600;}
   .returning-badge.show{display:block;}
 
   .order-summary-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;}
@@ -367,6 +368,7 @@
     <h3>অর্ডার সফল হয়েছে!</h3>
     <p>আপনার অর্ডারটি জমা হয়েছে, শীঘ্রই আমরা কল করে কনফার্ম করব।</p>
     <div class="order-id-tag" id="orderIdTag"></div>
+    <p style="font-size:11px;color:var(--text-light);line-height:1.6;margin:10px 0 16px;">(আপনার IP Address এর মাধ্যমে লোকেশন আমাদের কাছে রয়েছে। তাই ফেইক অর্ডার করা থেকে বিরত থাকুন। ফেইক অর্ডার করা হলে আইনগত ব্যবস্থা নেওয়া হবে।)</p>
     <button id="successOkBtn">ঠিক আছে</button>
   </div>
 </div>
@@ -687,7 +689,7 @@ function applyDeepLink(){
     const p = allProducts.find(x=>x.id===productId);
     if(p){
       if(typeof fbq !== 'undefined'){
-        fbq('track','ViewContent',{content_ids:[p.id], content_name:p.name, value:p.price, currency:'BDT'});
+        fbq('track','ViewContent',{content_ids:[p.id], content_type:'product', content_name:p.name, value:p.price, currency:'BDT'});
       }
       if(typeof gtag !== 'undefined'){
         gtag('event','view_item',{currency:'BDT', value:p.price, items:[{item_id:p.id, item_name:p.name}]});
@@ -787,7 +789,7 @@ function openQuickView(id){
   document.getElementById('qvOverlay').classList.add('show');
   saveRecentlyViewed(p);
   if(typeof fbq !== 'undefined'){
-    fbq('track','ViewContent',{content_ids:[p.id], content_name:p.name, value:p.price, currency:'BDT'});
+    fbq('track','ViewContent',{content_ids:[p.id], content_type:'product', content_name:p.name, value:p.price, currency:'BDT'});
   }
   if(typeof ttq !== 'undefined'){
     ttq.track('ViewContent',{content_id:p.id, content_name:p.name, value:p.price, currency:'BDT'});
@@ -912,7 +914,7 @@ function addToCart(id){
   toast('Cart এ যোগ হয়েছে');
 
   if(typeof fbq !== 'undefined'){
-    fbq('track','AddToCart',{content_ids:[product.id], content_name:product.name, value:product.price, currency:'BDT'});
+    fbq('track','AddToCart',{content_ids:[product.id], content_type:'product', content_name:product.name, value:product.price, currency:'BDT'});
   }
   if(typeof ttq !== 'undefined'){
     ttq.track('AddToCart',{content_id:product.id, content_name:product.name, value:product.price, currency:'BDT'});
@@ -998,7 +1000,7 @@ document.getElementById('goCheckout').addEventListener('click', ()=>{
 
   const total = cart.reduce((s,c)=>s+c.price*c.qty,0);
   if(typeof fbq !== 'undefined'){
-    fbq('track','InitiateCheckout',{value: total, currency:'BDT', num_items: cart.length});
+    fbq('track','InitiateCheckout',{value: total, currency:'BDT', num_items: cart.length, content_ids: cart.map(c=>c.id), content_type:'product'});
   }
   if(typeof ttq !== 'undefined'){
     ttq.track('InitiateCheckout',{value: total, currency:'BDT'});
@@ -1063,11 +1065,21 @@ async function checkReturningCustomer(phone, badgeId, prefill){
     return;
   }
   try{
-    const q = query(collection(db,'orders'), where('phone','==',phone), limit(1));
+    const q = query(collection(db,'orders'), where('phone','==',phone), limit(10));
     const snap = await getDocs(q);
     if(!snap.empty){
+      const unresolvedStatuses = ['Processing','Payment Pending','On Hold'];
+      const hasUnresolvedOrder = snap.docs.some(d => unresolvedStatuses.includes(d.data().status || 'Processing'));
+      const badge = document.getElementById(badgeId);
+      if(hasUnresolvedOrder){
+        badge.textContent = '⚠️ আপনার আগের একটি অর্ডার এখনো প্রসেসিং-এ আছে। নতুন অর্ডার করার আগে 01928183469 নম্বরে যোগাযোগ করুন।';
+        badge.classList.add('show','warning');
+      }else{
+        badge.textContent = '👋 স্বাগতম! আপনি আমাদের পুরনো কাস্টমার।';
+        badge.classList.remove('warning');
+        badge.classList.add('show');
+      }
       const prevOrder = snap.docs[0].data();
-      document.getElementById(badgeId).classList.add('show');
       if(prefill){
         if(prevOrder.customerName && !document.getElementById('custName').value){
           document.getElementById('custName').value = prevOrder.customerName;
@@ -1125,10 +1137,19 @@ document.getElementById('placeOrderBtn').addEventListener('click', async ()=>{
   btn.textContent = 'অর্ডার প্রসেস হচ্ছে...';
 
   try{
-    // check returning customer
-    const q = query(collection(db,'orders'), where('phone','==',phone), limit(1));
+    // check returning customer + block duplicate orders while a previous order is still unresolved
+    const q = query(collection(db,'orders'), where('phone','==',phone), limit(10));
     const snap = await getDocs(q);
     const isReturning = !snap.empty;
+
+    const unresolvedStatuses = ['Processing','Payment Pending','On Hold'];
+    const hasUnresolvedOrder = snap.docs.some(d => unresolvedStatuses.includes(d.data().status || 'Processing'));
+    if(hasUnresolvedOrder){
+      toast('আপনি একই নাম্বার থেকে একাধিক অর্ডার করতে চাচ্ছেন। পুনরায় অর্ডার করতে 01928183469 নম্বরে যোগাযোগ করুন।');
+      btn.disabled = false;
+      btn.textContent = 'অর্ডার কনফার্ম করুন';
+      return;
+    }
 
     const subtotal = orderItems.reduce((s,c)=>s+c.price*c.qty,0);
     const deliveryCharge = getDeliveryCharge();
@@ -1166,10 +1187,21 @@ document.getElementById('placeOrderBtn').addEventListener('click', async ()=>{
     checkoutDrawer.classList.remove('open');
     cartOverlay.classList.remove('open');
     if(typeof fbq !== 'undefined'){
-      fbq('track','Purchase',{value: total, currency:'BDT'});
+      fbq('track','Purchase',{
+        value: total,
+        currency:'BDT',
+        content_ids: orderItems.map(i=>i.id),
+        content_type: 'product',
+        contents: orderItems.map(i=>({id:i.id, quantity:i.qty, item_price:i.price})),
+        num_items: orderItems.reduce((s,i)=>s+i.qty,0)
+      });
     }
     if(typeof ttq !== 'undefined'){
-      ttq.track('CompletePayment',{value: total, currency:'BDT'});
+      ttq.track('CompletePayment',{
+        value: total,
+        currency:'BDT',
+        contents: orderItems.map(i=>({content_id:i.id, content_name:i.name, quantity:i.qty, price:i.price}))
+      });
     }
     if(typeof gtag !== 'undefined'){
       gtag('event','purchase',{currency:'BDT', value: total, transaction_id: orderRef.id});
