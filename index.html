@@ -712,7 +712,7 @@ function renderProducts(){
           <span class="card-price">${tk(p.price)}</span>
           ${p.oldPrice ? `<span class="card-oldprice">${tk(p.oldPrice)}</span>` : ''}
         </div>
-        <button class="add-btn" data-id="${p.id}">কার্টে যোগ করুন</button>
+        <button class="add-btn" data-id="${p.id}">অর্ডার করুন</button>
       </div>
     </div>
   `).join('');
@@ -724,7 +724,13 @@ function renderProducts(){
   grid.querySelectorAll('.add-btn').forEach(btn=>{
     btn.addEventListener('click', e=>{
       e.stopPropagation();
-      addToCart(btn.dataset.id);
+      const product = allProducts.find(p=>p.id===btn.dataset.id);
+      if(!product) return;
+      buyNowItems = [{id: product.id, name: product.name, price: product.price, image: product.image, qty: 1}];
+      checkoutDrawer.classList.add('open');
+      cartOverlay.classList.add('open');
+      renderCheckoutSummary();
+      startIncompleteOrderTracking();
     });
   });
 
