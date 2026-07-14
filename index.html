@@ -745,10 +745,7 @@ function renderProducts(){
 
   grid.innerHTML = list.map(p=>`
     <div class="card" data-id="${p.id}">
-      <div style="position:relative;">
-        <img data-src="${cldResize(p.image,320)||''}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'/%3E" alt="${p.name||''}" class="lazy-img">
-        <span style="position:absolute;top:6px;left:6px;background:${p.freeDelivery==='Yes'?'var(--accent)':'var(--primary)'};color:#fff;font-size:10px;font-weight:700;padding:3px 7px;border-radius:5px;">${p.freeDelivery==='Yes'?'🚚 ডেলিভারি চার্জ প্রযোজ্য':'🚚 ফ্রি ডেলিভারি'}</span>
-      </div>
+      <img data-src="${cldResize(p.image,320)||''}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'/%3E" alt="${p.name||''}" class="lazy-img">
       <div class="card-body">
         <div class="card-title">${p.name||'Untitled'}</div>
         <div class="stars">★★★★★<span class="rating-count">(${p.reviewCount||'১২'}+)</span></div>
@@ -756,6 +753,7 @@ function renderProducts(){
           <span class="card-price">${tk(p.price)}</span>
           ${p.oldPrice ? `<span class="card-oldprice">${tk(p.oldPrice)}</span>` : ''}
         </div>
+        <div style="margin-top:4px;"><span style="background:${p.freeDelivery==='Yes'?'#FCEBEB':'#E1F5EE'};color:${p.freeDelivery==='Yes'?'#791F1F':'var(--primary-dark)'};font-size:10px;font-weight:700;padding:3px 7px;border-radius:5px;">${p.freeDelivery==='Yes'?'🚚 ডেলিভারি চার্জ প্রযোজ্য':'🚚 ফ্রি ডেলিভারি'}</span></div>
         <button class="add-btn" data-id="${p.id}">অর্ডার করুন</button>
       </div>
     </div>
