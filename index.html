@@ -363,6 +363,7 @@
         <span class="card-oldprice" id="qvOldPrice"></span>
       </div>
       <div class="qv-desc" id="qvDesc"></div>
+      <a href="#" id="qvYoutubeBtn" target="_blank" style="display:none;align-items:center;justify-content:center;gap:6px;width:100%;padding:10px;background:#FF0000;color:#fff;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;margin-bottom:8px;">▶️ ভিডিও দেখুন</a>
       <button class="buy-now-btn" id="qvBuyNowBtn">অর্ডার করুন</button>
       <button class="checkout-btn" id="qvAddBtn" style="background:var(--card-bg);color:var(--primary);border:1.5px solid var(--primary);margin-top:8px;">কার্টে যোগ করুন</button>
     </div>
@@ -806,6 +807,13 @@ function openQuickView(id){
   document.getElementById('qvPrice').textContent = tk(p.price);
   document.getElementById('qvOldPrice').textContent = p.oldPrice ? tk(p.oldPrice) : '';
   document.getElementById('qvDesc').textContent = (p.description || 'এই পণ্যটি সম্পর্কে বিস্তারিত তথ্য শীঘ্রই যোগ করা হবে।') + (siteSettings.product_disclaimer ? ' ' + siteSettings.product_disclaimer : '');
+  const ytBtn = document.getElementById('qvYoutubeBtn');
+  if(p.youtubeLink){
+    ytBtn.href = p.youtubeLink;
+    ytBtn.style.display = 'flex';
+  }else{
+    ytBtn.style.display = 'none';
+  }
   document.getElementById('qvAddBtn').dataset.id = id;
   document.getElementById('qvOverlay').classList.add('show');
   saveRecentlyViewed(p);
