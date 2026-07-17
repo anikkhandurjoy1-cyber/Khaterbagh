@@ -242,6 +242,7 @@ td{padding:9px 8px;border-top:1px solid var(--border);white-space:nowrap;}
         <div class="form-group"><label>সেল মূল্য (৳)</label><input type="number" id="pSale"></div>
         <div class="form-group"><label>স্টক</label><input type="number" id="pStock" value="10"></div>
       </div>
+      <div class="form-group" style="margin-bottom:10px;"><label>YouTube ভিডিও লিংক (ঐচ্ছিক)</label><input type="text" id="pYoutube" placeholder="https://youtube.com/watch?v=..."></div>
       <div class="form-group" style="margin-bottom:10px;"><label>বিবরণ</label><textarea id="pDesc" rows="2"></textarea></div>
       <input type="hidden" id="editingProductId">
       <div style="display:flex;gap:8px;">
@@ -837,6 +838,7 @@ document.getElementById('saveProductBtn').addEventListener('click', async ()=>{
   const code = document.getElementById('pCode').value.trim();
   const status = document.getElementById('pStatus').value;
   const freeDelivery = document.getElementById('pFreeDelivery').value;
+  const youtubeLink = document.getElementById('pYoutube').value.trim();
   const regular = Number(document.getElementById('pRegular').value)||0;
   const sale = Number(document.getElementById('pSale').value)||0;
   const category = document.getElementById('pCategory').value;
@@ -846,7 +848,7 @@ document.getElementById('saveProductBtn').addEventListener('click', async ()=>{
   if(!name || !regular){ toast('নাম এবং মূল্য পূরণ করুন'); return; }
 
   const data = {
-    name, code, status, freeDelivery, regular, sale: sale||null, category, stock, description,
+    name, code, status, freeDelivery, youtubeLink, regular, sale: sale||null, category, stock, description,
     images: uploadedImages, image: uploadedImages[0] || null,
     price: sale || regular, oldPrice: sale ? regular : null,
   };
@@ -860,6 +862,7 @@ document.getElementById('saveProductBtn').addEventListener('click', async ()=>{
 function resetProductForm(){
   document.getElementById('pName').value=''; document.getElementById('pCode').value='';
   document.getElementById('pStatus').value='Active'; document.getElementById('pFreeDelivery').value='No';
+  document.getElementById('pYoutube').value='';
   document.getElementById('pRegular').value='';
   document.getElementById('pSale').value=''; document.getElementById('pCategory').value='';
   document.getElementById('pStock').value='10'; document.getElementById('pDesc').value='';
@@ -910,6 +913,7 @@ function renderProductTable(){
     document.getElementById('pCode').value = p.code||'';
     document.getElementById('pStatus').value = p.status||'Active';
     document.getElementById('pFreeDelivery').value = p.freeDelivery||'No';
+    document.getElementById('pYoutube').value = p.youtubeLink||'';
     document.getElementById('pRegular').value = p.regular||'';
     document.getElementById('pSale').value = p.sale||'';
     document.getElementById('pCategory').value = p.category||'';
